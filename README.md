@@ -48,3 +48,7 @@ The viewer connects to the community live stream at `wss://live2.lightningmaps.o
 ### Historical lightning in India
 
 Historical hourly and daily lightning observations are viewable through the [ISRO/NRSC Bhuvan Lightning portal](https://bhuvan-app1.nrsc.gov.in/lightning/), including its Hourly Lightning Data and Hourly Lightning ECV players. Bhuvan currently offers recent-date selection, and the raw-data download workflow may require authorized registration. There is **no verified public time-range JSON endpoint integrated in this repository**, so the viewer's satellite time slider does **not** display historic lightning for selected frames. Use the link in the map and sidebar to inspect genuine historical observations separately. The lightning strike stream is not an archive, and a zero strike count must not be interpreted as no storm activity.
+
+## Map rendering (v3)
+
+The ocean viewer uses a **Canvas-backed fallback** generated from geographic land polygon data embedded inside the HTML. It is layered outside Leaflet to avoid map-pane stacking issues. Esri remains selected by default, but incomplete Esri tiles are hidden rather than shown as a patchwork. The independent coastline canvas paints a continuous land/ocean map even if image servers are unavailable. For detailed roads and place names, the Esri tiles still need to load successfully. A small `MAP V3` marker in the header confirms that the latest viewer is open.
