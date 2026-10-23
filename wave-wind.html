@@ -58,10 +58,10 @@
   <section class="group"><h3>Map controls</h3>
     <label class="caption" for="mapStyle">Basemap</label>
     <select id="mapStyle" aria-label="Map provider">
+      <option value="esri">Esri · topographic map (default)</option>
       <option value="osm">OpenStreetMap · street map</option>
-      <option value="esri">Esri · topographic map</option>
     </select>
-    <p class="muted">Failed map tiles retry individually on the backup provider. You can also switch map styles here.</p>
+    <p class="muted">Esri is the default. Missing tiles retry on alternate Esri endpoints before OpenStreetMap.</p>
     <div class="presets">
       <button data-place="kovalam">Kovalam / ECR</button><button data-place="pondy">Pondicherry</button>
       <button data-place="chennai">Chennai</button><button data-place="bay">Bay of Bengal</button>
@@ -130,63 +130,75 @@ let timeline=[],hour=0,playTimer=0,playing=false,grid=null,gridSeq=0,pointSeq=0,
 const cache=new Map();
 const ctx=$('fieldCanvas').getContext('2d',{alpha:true});
 const map=L.map('map',{zoomControl:false,preferCanvas:true,minZoom:3,maxZoom:11,worldCopyJump:false}).setView([12.85,80.65],8);
-// Do not change the entire basemap halfway through drawing: that creates
-// a checkerboard of old, new, and unloaded tiles. Retry ONLY the failed tile.
+// Default: Esri topographic. Retry individual failed/stalled tiles instead of
+// switching the whole basemap, which previously left checkerboard gaps.
 const MAP_PROVIDERS={
- osm:{name:'OpenStreetMap',url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-      attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'},
- esri:{name:'Esri topographic',url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-      attribution:'Map tiles &copy; Esri and contributors'}
+ esri:{name:'Esri topographic',attribution:'Map tiles &copy; Esri and contributors'},
+ osm:{name:'OpenStreetMap',attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}
 };
-let mapProvider='osm',baseTiles=null,tileOk=0,tileBackup=0,tileFailed=0;
-const tileSrc=(provider,c)=>L.Util.template(MAP_PROVIDERS[provider].url,{z:c.z,x:c.x,y:c.y});
+const TILE_SERVERS={
+ topo:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+ mirror:'https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+ street:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+ osm:'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+};
+let mapProvider='esri',baseTiles=null,healthTimer=0;
+const tileUrl=(source,c)=>L.Util.template(TILE_SERVERS[source],{x:c.x,y:c.y,z:c.z});
 function tileHealth(){
- const el=$('mapHealth');
- if(!el)return;
- el.textContent='Map: '+MAP_PROVIDERS[mapProvider].name
-  +(tileOk?' · '+tileOk+' loaded':' · loading')
-  +(tileBackup?' · '+tileBackup+' backup':'')
-  +(tileFailed?' · '+tileFailed+' failed':'');
- el.classList.toggle('bad',tileFailed>0);
+ const el=$('mapHealth');if(!el)return;
+ const view=map.getContainer().getBoundingClientRect();
+ let total=0,loaded=0,recovered=0,failed=0;
+ if(baseTiles&&baseTiles._tiles)for(const record of Object.values(baseTiles._tiles)){
+  const img=record.el;if(!img||!img.isConnected)continue;
+  const box=img.getBoundingClientRect();
+  if(box.right<=view.left||box.left>=view.right||box.bottom<=view.top||box.top>=view.bottom)continue;
+  total++;
+  if(img.dataset.mapLoaded==='1'){loaded++;if(img.dataset.mapBackup==='1')recovered++;}
+  else if(img.dataset.mapFailed==='1')failed++;
+ }
+ el.textContent='Map: '+MAP_PROVIDERS[mapProvider].name+' · '+loaded+'/'+total+' visible tiles'
+ +(recovered?' · '+recovered+' recovered':'')+(failed?' · '+failed+' failed':'');
+ el.classList.toggle('warn',total>loaded&&failed===0);
+ el.classList.toggle('bad',failed>0);
 }
-const FallbackTiles=L.TileLayer.extend({
+function queueTileHealth(){clearTimeout(healthTimer);healthTimer=setTimeout(tileHealth,80);}
+const ResilientTiles=L.TileLayer.extend({
  createTile:function(coords,done){
-  const img=document.createElement('img');
-  img.alt='';img.setAttribute('role','presentation');
-  let ended=false,backup=false;
-  const other=mapProvider==='osm'?'esri':'osm';
-  const timeout=setTimeout(()=>{
-   if(ended)return;
-   ended=true;tileFailed++;tileHealth();
-   done(new Error('Map tile stalled'),img);
-  },16000);
-  img.onload=()=>{
-   if(ended)return;
-   ended=true;clearTimeout(timeout);
-   tileOk++;if(backup)tileBackup++;
-   tileHealth();done(null,img);
-  };
-  img.onerror=()=>{
-   if(ended)return;
-   if(!backup){backup=true;img.src=tileSrc(other,coords);}
-   else{ended=true;clearTimeout(timeout);tileFailed++;tileHealth();done(new Error('Map tile unavailable'),img);}
-  };
-  img.src=tileSrc(mapProvider,coords);
-  return img;
+  const img=document.createElement('img');img.alt='';img.decoding='async';
+  img.setAttribute('role','presentation');img.dataset.mapLoaded='0';
+  const sources=mapProvider==='esri'?['topo','mirror','street','osm']:['osm','topo','mirror','street'];
+  let index=0,ended=false,timer=0;
+  function finish(err){
+   if(ended)return;ended=true;clearTimeout(timer);
+   img.dataset.mapLoaded=err?'0':'1';img.dataset.mapFailed=err?'1':'0';
+   img.dataset.mapBackup=index>1?'1':'0';
+   done(err,img);queueTileHealth();
+  }
+  function attempt(){
+   if(ended)return;clearTimeout(timer);
+   if(index>=sources.length){finish(new Error('All basemap tile sources failed'));return;}
+   const source=sources[index++];
+   img.onload=()=>img.naturalWidth&&img.naturalHeight?finish(null):attempt();
+   img.onerror=attempt;
+   img.src=tileUrl(source,coords);
+   timer=setTimeout(attempt,source==='osm'?8500:7500);
+  }
+  attempt();return img;
  }
 });
-function selectMapProvider(name){
- if(!MAP_PROVIDERS[name])return;
+function selectMapProvider(provider){
+ if(!MAP_PROVIDERS[provider])return;
  if(baseTiles)map.removeLayer(baseTiles);
- mapProvider=name;tileOk=0;tileBackup=0;tileFailed=0;
- baseTiles=new FallbackTiles(MAP_PROVIDERS[name].url,{
-   minZoom:0,maxZoom:19,keepBuffer:3,updateWhenIdle:true,
-   attribution:MAP_PROVIDERS.osm.attribution+' · '+MAP_PROVIDERS.esri.attribution
+ mapProvider=provider;
+ baseTiles=new ResilientTiles(TILE_SERVERS[provider==='esri'?'topo':'osm'],{
+  minZoom:0,maxZoom:19,keepBuffer:2,updateWhenIdle:false,
+  attribution:MAP_PROVIDERS.esri.attribution+' · '+MAP_PROVIDERS.osm.attribution
  }).addTo(map);
  baseTiles.bringToBack();
- $('mapStyle').value=name;tileHealth();
+ baseTiles.on('tileload tileerror loading load',queueTileHealth);
+ $('mapStyle').value=provider;queueTileHealth();
 }
-selectMapProvider('osm');
+selectMapProvider('esri');
 // Even if BOTH raster servers are unavailable, display real land shapes
 // below the raster tile pane via Natural Earth (not forecast data).
 map.createPane('coastBackup');
@@ -436,7 +448,7 @@ $('now').onclick=()=>{stopPlay();hour=nowIndex();syncTimeline();};
 $('play').onclick=()=>{if(playing){stopPlay();return;}if(!timeline.length)return;if(hour===timeline.length-1)hour=nowIndex();playing=true;$('play').textContent='Ⅱ';syncTimeline();playNext();};
 $('mobilePanel').onclick=()=>{const open=$('sidebar').classList.toggle('open');$('mobilePanel').setAttribute('aria-expanded',String(open));};
 map.on('click',e=>setPoint(e.latlng));
-map.on('moveend zoomend resize',()=>{draw();scheduleGrid(750);});
+map.on('moveend zoomend resize',()=>{draw();scheduleGrid(750);queueTileHealth();});
 window.addEventListener('resize',()=>{map.invalidateSize();draw();drawTide();});
 plotLegend();draw();loadPoint();scheduleGrid(300);
 })();
