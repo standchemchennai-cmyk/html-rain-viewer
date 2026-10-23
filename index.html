@@ -102,7 +102,7 @@ function drawLightning(){
  }
  const ageText=last?' · newest '+Math.max(0,Math.round((now-last)/60000))+'m ago':' · no strikes received in view';
  const frameText=frames.length&&index!==frames.length-1?' · live overlay on historical IR':'';
- status('litStatus','✓ Lightning LIVE · '+visible+' strikes'+ageText+frameText,'ok');
+ status('litStatus','✓ Lightning LIVE · '+visible+' '+(visible===1?'strike':'strikes')+ageText+frameText,'ok');
 }
 function connectLightning(){
  if(!checks.lit||typeof WebSocket==='undefined')return;
