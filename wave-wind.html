@@ -59,8 +59,8 @@
       <button data-place="kovalam">Kovalam / ECR</button><button data-place="pondy">Pondicherry</button>
       <button data-place="chennai">Chennai</button><button data-place="bay">Bay of Bengal</button>
       <button data-place="india">Indian Ocean</button><button data-place="equator">Equator</button>
-    </div><div class="controls-row"><label for="opacity">Field opacity</label><span id="opacityLabel">74%</span></div>
-    <input id="opacity" type="range" min="15" max="95" value="74" aria-label="Field opacity">
+    </div><div class="controls-row"><label for="opacity">Field opacity</label><span id="opacityLabel">48%</span></div>
+    <input id="opacity" type="range" min="15" max="95" value="48" aria-label="Field opacity">
     <div class="controls-row"><label><input id="arrows" type="checkbox" checked> Direction arrows</label><label><input id="shading" type="checkbox" checked> Colour</label></div>
     <button id="refreshGrid" class="refresh-button">↻ Update forecast map</button>
   </section>
@@ -118,12 +118,25 @@ const FIELDS={
 const WIND_VARS='wind_speed_10m,wind_direction_10m,wind_gusts_10m';
 const WAVE_VARS='wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period';
 const CACHE_TTL=15*60000, COLS=7, ROWS=5;
-let layer='wind',windModel='best_match',waveModel='best_match',alpha=.74,arrows=true,shading=true;
+let layer='wind',windModel='best_match',waveModel='best_match',alpha=.48,arrows=true,shading=true;
 let timeline=[],hour=0,playTimer=0,playing=false,grid=null,gridSeq=0,pointSeq=0,fetchTimer=0,hoverPoint=null,point={lat:PLACES.kovalam.lat,lon:PLACES.kovalam.lon,name:PLACES.kovalam.name},pointData={wind:null,wave:null,tide:null};
 const cache=new Map();
 const ctx=$('fieldCanvas').getContext('2d',{alpha:true});
 const map=L.map('map',{zoomControl:false,preferCanvas:true,minZoom:3,maxZoom:11,worldCopyJump:false}).setView([12.85,81.2],8);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'}).addTo(map);
+// Esri keyless basemap, shared with the original rain viewer. If its tiles fail, use OpenStreetMap.
+let mapFallback=false;
+let tileFailures=0;
+const topo=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{
+  maxZoom:19,attribution:'Tiles &copy; Esri and contributors'
+}).addTo(map);
+topo.on('tileerror',()=>{
+  if(mapFallback||++tileFailures<3)return;
+  mapFallback=true;
+  map.removeLayer(topo);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map).bringToBack();
+});
 L.control.zoom({position:'bottomright'}).addTo(map);
 const pointMarker=L.circleMarker([point.lat,point.lon],{radius:6,weight:2,color:'#ffffff',fillColor:'#54dcff',fillOpacity:1}).addTo(map);
 function setStatus(msg,kind){$('status').textContent=msg;$('status').className='pill'+(kind?' '+kind:'');}
