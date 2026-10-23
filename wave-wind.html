@@ -86,7 +86,7 @@
   <canvas id="vectorBase" class="vector-base" aria-hidden="true"></canvas>
   <canvas id="fieldCanvas" class="field-canvas" aria-hidden="true"></canvas>
   <canvas id="vectorCoast" class="vector-coast" aria-hidden="true"></canvas>
-  <div class="map-top"><div id="status" class="pill">Connecting to forecast sources…</div><div id="mapHealth" class="pill">Map: loading tiles…</div></div>
+  <div class="map-top"><div id="status" class="pill">Connecting to forecast sources…</div><div id="mapHealth" class="pill">Map engine v3 · starting…</div></div>
   <section class="inspector" aria-label="Selected location forecast">
     <h3 id="pointName">Kovalam · offshore</h3><div id="pointCoords" class="coords">12.78° N · 80.29° E</div><div class="hint">Click anywhere to inspect the forecast</div>
     <div class="metricgrid">
@@ -532,7 +532,7 @@ $('opacity').oninput=e=>{alpha=+e.target.value/100;$('opacityLabel').textContent
 $('arrowSpacing').oninput=e=>{arrowSpacing=+e.target.value;$('arrowSpacingLabel').textContent=arrowSpacing+' px'+(arrowSpacing<=46?' · dense':'');draw();};
 $('arrows').onchange=e=>{arrows=e.target.checked;draw();};$('shading').onchange=e=>{shading=e.target.checked;draw();};
 $('mapStyle').onchange=e=>selectMapProvider(e.target.value);
-$('retryMap').onclick=()=>{if(baseTiles){showRaster(false);baseTiles.redraw();queueTileHealth();}};
+$('retryMap').onclick=()=>{showRaster(false);if(baseTiles)baseTiles.redraw();else drawVector();queueTileHealth();};
 $('refreshGrid').onclick=()=>{cache.clear();loadGrid(true);loadPoint();};
 $('topRefresh').onclick=()=>{cache.clear();loadGrid(true);loadPoint();if(baseTiles){baseTiles.redraw();queueTileHealth();}};
 $('timeSlider').oninput=e=>{stopPlay();hour=+e.target.value;syncTimeline();};
