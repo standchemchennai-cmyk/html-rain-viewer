@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#081522">
+<title>Wavebaba Ocean Viewer — Wind, Waves & Tides</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAo9TchA3KfM3UuJo2/6pT9AsFgl0c7/AMvHBXrI=" crossorigin="">
+<style>
+:root{color-scheme:dark;--bg:#07121f;--panel:#0c1c2d;--panel2:#10263b;--line:#29445a;--text:#eff8ff;--sub:#a0b9cc;--blue:#6fd6ff;--teal:#66ead8}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:13px/1.5 system-ui,-apple-system,Segoe UI,Arial,sans-serif}button,input,select{font:inherit}button,select{color:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #8ee1ff;outline-offset:2px}button:disabled{opacity:.45;cursor:not-allowed}a{color:#92dfff}
+#app{height:100dvh;min-height:500px;display:flex;flex-direction:column;overflow:hidden}
+.top{height:59px;flex:none;display:flex;align-items:center;gap:13px;padding:0 17px;background:#0a1a2b;border-bottom:1px solid var(--line);z-index:1001}.brandicon{width:37px;height:37px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(135deg,#005e81,#155779);font-size:22px}.brand{min-width:0;flex:1}.brand strong{font-size:17px;letter-spacing:-.45px;display:block}.brand small{font-size:10px;letter-spacing:.55px;color:var(--sub);display:block}.top-actions{display:flex;align-items:center;gap:8px}.top-actions a,.top-actions button{white-space:nowrap;text-decoration:none;padding:8px 11px;border-radius:9px;background:#13324b;border:1px solid #345974;color:#d5f2ff}
+.shell{display:flex;flex:1;min-height:0}.side{width:273px;flex:none;background:var(--panel);border-right:1px solid var(--line);padding:17px 15px 175px;overflow-y:auto;z-index:700}.side h3{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#a5d9ef;margin:0 0 12px}.group{padding-bottom:19px;margin-bottom:19px;border-bottom:1px solid #2a4356}.side label.caption{display:block;color:#c1d9ea;font-size:11px;margin:10px 0 5px}.side select{width:100%;padding:10px;background:#17334b;border:1px solid #3e607b;border-radius:9px;min-height:37px}.layer-picks{display:grid;grid-template-columns:1fr 1fr;gap:7px}.layer-picks button,.presets button{border:1px solid #355e79;background:#153149;color:#c9e6f5;padding:10px 7px;border-radius:9px;font-size:11px}.layer-picks button.active{background:#075b84;border-color:#6ccfff;color:white}.presets{display:grid;grid-template-columns:1fr 1fr;gap:7px}.muted{font-size:11px;line-height:1.65;color:var(--sub)}.controls-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0 6px;color:#c2d5e6;font-size:11px}.controls-row input{accent-color:#5cd8ed}.side input[type=range]{width:100%;accent-color:var(--blue)}.refresh-button{padding:10px 11px;border:1px solid #5293ab;background:#125377;border-radius:9px;width:100%;margin-top:10px}
+.main{flex:1;min-width:0;position:relative;background:#122c3e}.map{position:absolute;inset:0}.leaflet-container{background:#16334a;font-family:inherit}.leaflet-control-attribution{background:#061b2bdc!important;color:#bdd7e4!important;font-size:9px!important}.leaflet-control-attribution a{color:#a9e4ff!important}.leaflet-bar a{background:#102e45;color:#fff;border-color:#375772}.leaflet-bar a:hover{background:#1d4e69;color:#fff}.field-canvas{position:absolute;inset:0;pointer-events:none;z-index:450}.map-top{position:absolute;top:12px;left:12px;right:322px;display:flex;gap:7px;align-items:start;z-index:650;pointer-events:none}.map-top>*{pointer-events:auto}.pill{background:#091f33ed;border:1px solid #42667e;color:#d9f2ff;padding:8px 10px;border-radius:10px;box-shadow:0 4px 18px #0005;font-size:11px}.pill.warn{color:#ffd797}.pill.bad{color:#ffb3a4}.legend{position:absolute;z-index:600;left:13px;bottom:173px;background:#091e2fed;border:1px solid #3c647c;border-radius:12px;padding:10px 12px;width:225px}.legend h4{font-size:11px;margin:0 0 7px}.gradient{height:11px;border-radius:5px;margin:6px 0 4px}.legendscale{font-size:10px;display:flex;justify-content:space-between;color:#bbd5e5}.legend small{display:block;color:#adcadb;font-size:10px;margin-top:7px}.inspector{position:absolute;z-index:650;right:12px;top:12px;width:299px;max-height:calc(100% - 187px);overflow-y:auto;background:#091b2cf5;border:1px solid #395a74;box-shadow:0 15px 42px #0007;border-radius:14px;padding:14px}.inspector h3{margin:0;font-size:15px}.inspector .coords{font-size:10px;color:#a0c1d3}.inspector .hint{font-size:10px;color:#95b6cb;margin-top:5px}.metricgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}.metric{background:#142e44;border:1px solid #315269;border-radius:9px;padding:9px}.metric label{font-size:10px;color:#afc8db;display:block}.metric strong{display:block;font-size:17px;line-height:1.35;margin-top:4px}.metric small{display:block;color:#90b2c7;font-size:10px;min-height:13px}.tidal{border-top:1px solid #2a4c61;padding-top:10px}.tidal-title{display:flex;align-items:center;justify-content:space-between;gap:8px}.tidal-title strong{font-size:12px}.tidal-title span{font-size:10px;color:#95d8ed}#tideChart{width:100%;height:115px;display:block;margin:6px 0;background:#0a2235;border-radius:8px}.tide-events{display:grid;gap:4px;font-size:11px;color:#c4dbea}.tide-events b{color:#fff}.tide-warning{font-size:10px;color:#adbbca;line-height:1.4;margin-top:9px}.timeline{position:absolute;z-index:800;left:12px;right:12px;bottom:12px;padding:12px 15px;background:#081d2ff5;border:1px solid #3b617c;border-radius:14px;box-shadow:0 12px 30px #0009}.timerow{display:flex;justify-content:space-between;align-items:center;gap:12px}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#7fd6f5;font-weight:750}.time-label{font-size:18px;font-weight:800;letter-spacing:-.35px;margin-top:2px}.time-sub{font-size:10px;color:#a3c0d2}.playtools{display:flex;gap:6px}.playtools button{border:1px solid #44738c;border-radius:9px;background:#153b55;width:37px;height:37px;font-size:18px}.playtools button.primary{background:#00769e}.timeline input[type=range]{accent-color:#59cfee;width:100%;margin:12px 0 4px}.ruler{display:flex;justify-content:space-between;color:#a0b9cd;font-size:10px}.footer{display:flex;justify-content:space-between;gap:6px;border-top:1px solid #28465a;padding-top:7px;margin-top:8px;font-size:10px;color:#9dc1d5}.mobile-panel{display:none}.tiny{font-size:10px}.loading-spin{display:inline-block;animation:spin 2s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:1020px){.side{width:235px}.inspector{width:260px}.map-top{right:276px}}
+@media(max-width:760px){.top{height:55px;padding:0 9px;gap:7px}.brandicon{width:34px;height:34px}.brand strong{font-size:14px}.brand small{font-size:8px}.top-actions a{padding:7px;font-size:11px}.top-actions button{display:none}.side{position:absolute;left:0;top:55px;bottom:0;z-index:1000;width:min(305px,91vw);transform:translateX(-110%);transition:transform .2s;box-shadow:12px 0 30px #0007}.side.open{transform:translateX(0)}.mobile-panel{display:block;position:absolute;bottom:172px;left:12px;z-index:850;border:1px solid #6c9cba;background:#114262;border-radius:10px;padding:8px 10px}.inspector{top:56px;right:7px;width:218px;max-height:calc(100% - 244px);padding:10px}.metricgrid{gap:5px;margin:7px 0}.metric{padding:6px}.metric strong{font-size:14px}.inspector h3{font-size:12px}.tide-warning{font-size:9px}.map-top{right:8px;left:8px;top:9px}.pill{font-size:10px;padding:6px 8px}.legend{left:8px;bottom:160px;width:160px;padding:7px}.timeline{left:6px;right:6px;bottom:6px;padding:10px}.time-label{font-size:15px}.playtools button{width:32px;height:32px}.ruler,.footer{font-size:9px}}
+@media(max-width:470px){.inspector{top:51px;width:189px;max-height:calc(100% - 236px)}.metric small{display:none}.tidal-title{display:block}.inspector .hint{display:none}.legend{width:145px}.top-actions a{font-size:10px}.brand small{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+<header class="top">
+  <span class="brandicon">🌊</span><div class="brand"><strong>Wavebaba <span style="color:#79deff">Ocean Viewer</span></strong><small>LIVE MODEL FORECASTS · WIND · WAVES · TIDES</small></div>
+  <div class="top-actions"><a href="./index.html" title="Open original satellite/rain viewer">☁ Rain viewer</a><button id="topRefresh">↻ Refresh</button></div>
+</header>
+<div class="shell">
+<aside id="sidebar" class="side" aria-label="Forecast controls">
+  <section class="group"><h3>Weather layers</h3>
+    <div class="layer-picks" id="layers">
+      <button class="active" data-layer="wind" aria-pressed="true">➤ Wind speed</button>
+      <button data-layer="waves" aria-pressed="false">🌊 Wave height</button>
+      <button data-layer="swell" aria-pressed="false">↗ Primary swell</button>
+      <button data-layer="period" aria-pressed="false">◷ Swell period</button>
+    </div><p class="muted">Coloured forecast field with direction arrows. Ocean layers show modelled offshore conditions, not surf-break wave height.</p>
+  </section>
+  <section class="group"><h3>Forecast models</h3>
+    <label class="caption" for="windModel">Wind model</label><select id="windModel">
+      <option value="best_match">Best match · automatic</option>
+      <option value="ecmwf_ifs">ECMWF IFS</option>
+      <option value="ncep_gfs_seamless">NOAA GFS</option>
+      <option value="icon_global">DWD ICON global</option>
+      <option value="ukmo_global_deterministic_10km">UKMO global</option>
+      <option value="jma_gsm">JMA GSM</option>
+      <option value="meteofrance_arpege_world">Météo-France ARPEGE</option>
+    </select>
+    <label class="caption" for="waveModel">Wave / swell model</label><select id="waveModel">
+      <option value="best_match">Best match · automatic</option>
+      <option value="ecmwf_wam">ECMWF WAM</option>
+      <option value="ecmwf_wam025">ECMWF WAM 0.25°</option>
+      <option value="ncep_gfswave016">NOAA GFS Wave 0.16°</option>
+      <option value="ncep_gfswave025">NOAA GFS Wave 0.25°</option>
+      <option value="meteofrance_wave">Météo-France MFWAM</option>
+      <option value="dwd_gwam">DWD GWAM · short range</option>
+    </select>
+    <p class="muted">Wind and wave models are independent. Unavailable model hours remain blank, never replaced silently by another model.</p>
+  </section>
+  <section class="group"><h3>Map controls</h3><div class="presets">
+      <button data-place="kovalam">Kovalam / ECR</button><button data-place="pondy">Pondicherry</button>
+      <button data-place="chennai">Chennai</button><button data-place="bay">Bay of Bengal</button>
+      <button data-place="india">Indian Ocean</button><button data-place="equator">Equator</button>
+    </div><div class="controls-row"><label for="opacity">Field opacity</label><span id="opacityLabel">74%</span></div>
+    <input id="opacity" type="range" min="15" max="95" value="74" aria-label="Field opacity">
+    <div class="controls-row"><label><input id="arrows" type="checkbox" checked> Direction arrows</label><label><input id="shading" type="checkbox" checked> Colour</label></div>
+    <button id="refreshGrid" class="refresh-button">↻ Update forecast map</button>
+  </section>
+  <section class="group"><h3>Reading this map</h3>
+  <p class="muted">Click the map to inspect any location. The time slider controls map colours, arrows, selected-point forecasts and tide plot together. All times are India Standard Time (IST).</p>
+  <p class="muted">The map is a <b>sparse sampled approximation</b> of forecast grids, not official native-resolution model tiles. Wind arrows point towards the direction of travel; numerical direction follows meteorological “from” convention.</p>
+  <p class="muted">Tides use independent Open-Meteo sea-level forecasts including tidal effects. Coastal accuracy is limited; do not use for navigation.</p>
+  <p class="muted"><a target="_blank" rel="noopener" href="https://open-meteo.com/en/docs/marine-weather-api">Marine data & tide limitations ↗</a> · <a target="_blank" rel="noopener" href="https://open-meteo.com/en/docs">Weather models ↗</a></p>
+  </section>
+</aside>
+<main class="main">
+  <div id="map" class="map" aria-label="Forecast map"></div>
+  <canvas id="fieldCanvas" class="field-canvas" aria-hidden="true"></canvas>
+  <div class="map-top"><div id="status" class="pill">Connecting to forecast sources…</div></div>
+  <section class="inspector" aria-label="Selected location forecast">
+    <h3 id="pointName">Kovalam · offshore</h3><div id="pointCoords" class="coords">12.78° N · 80.29° E</div><div class="hint">Click anywhere to inspect the forecast</div>
+    <div class="metricgrid">
+      <div class="metric"><label>Wind</label><strong id="mWind">—</strong><small id="dWind">Wind model</small></div>
+      <div class="metric"><label>Significant waves</label><strong id="mWaves">—</strong><small id="dWaves">Wave model</small></div>
+      <div class="metric"><label>Primary swell</label><strong id="mSwell">—</strong><small id="dSwell">Wave model</small></div>
+      <div class="metric"><label>Swell period</label><strong id="mPeriod">—</strong><small id="dPeriod">Wave model</small></div>
+    </div>
+    <div class="tidal"><div class="tidal-title"><strong>〰 Tide / sea level</strong><span id="tideNow">Loading…</span></div>
+      <canvas id="tideChart" width="280" height="115" aria-label="Hourly modelled tide height chart"></canvas>
+      <div id="tideEvents" class="tide-events">Loading sea-level forecasts…</div>
+      <div class="tide-warning">Modelled sea-level height relative to mean sea level; <b>not</b> local chart datum. High/low times are approximate model extrema, not authoritative tide-table predictions.</div>
+    </div>
+  </section>
+  <section class="legend" id="legend"><h4 id="legendTitle">Wind · knots</h4><div id="legendGradient" class="gradient"></div><div id="legendScale" class="legendscale"></div><small>Arrows indicate travel direction. Hover/click the map for precise values.</small></section>
+  <button id="mobilePanel" class="mobile-panel" aria-expanded="false">☷ Layers & models</button>
+  <section class="timeline">
+    <div class="timerow"><div><div class="eyebrow">Hourly forecast · IST</div><div id="timeLabel" class="time-label">Loading timeline…</div><div id="timeSub" class="time-sub">Loading model timestamps…</div></div>
+      <div class="playtools"><button id="prev" title="Previous hour" aria-label="Previous hour">‹</button><button id="play" class="primary" title="Play timeline" aria-label="Play timeline">▶</button><button id="next" title="Next hour" aria-label="Next hour">›</button><button id="now" title="Jump to current forecast hour">↥</button></div></div>
+    <input id="timeSlider" type="range" min="0" max="0" value="0" step="1" aria-label="Forecast date and time" disabled>
+    <div id="ruler" class="ruler"><span>Loading</span><span>forecast</span><span>timeline</span></div>
+    <div class="footer"><span id="modelBadge">Forecast · not observations</span><span>Open-Meteo · IST · non-commercial API</span></div>
+  </section>
+</main></div></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const IST=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:true});
+const IST_SHORT=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:true});
+const PLACES={kovalam:{lat:12.78,lon:80.29,z:9,name:'Kovalam · offshore'},pondy:{lat:11.92,lon:79.92,z:9,name:'Pondicherry · offshore'},chennai:{lat:13.08,lon:80.35,z:9,name:'Chennai · offshore'},bay:{lat:13,lon:84,z:6,name:'Bay of Bengal'},india:{lat:4,lon:79,z:4,name:'Indian Ocean'},equator:{lat:0,lon:87,z:5,name:'Equatorial Indian Ocean'}};
+const MODELS_WIND={best_match:'Best match',ecmwf_ifs:'ECMWF IFS',ncep_gfs_seamless:'NOAA GFS',icon_global:'DWD ICON',ukmo_global_deterministic_10km:'UKMO',jma_gsm:'JMA GSM',meteofrance_arpege_world:'ARPEGE'};
+const MODELS_WAVE={best_match:'Best match',ecmwf_wam:'ECMWF WAM',ecmwf_wam025:'ECMWF WAM 0.25',ncep_gfswave016:'GFS Wave 0.16',ncep_gfswave025:'GFS Wave 0.25',meteofrance_wave:'MFWAM',dwd_gwam:'DWD GWAM'};
+const FIELDS={
+ wind:{type:'wind',field:'wind_speed_10m',dir:'wind_direction_10m',label:'Wind speed',unit:'kn',stops:[0,5,10,15,20,30,40,55],colors:['#1c5480','#25b5be','#6de6aa','#dfef73','#ffbc4d','#ed7243','#c53e86','#87238c']},
+ waves:{type:'wave',field:'wave_height',dir:'wave_direction',label:'Significant wave height',unit:'m',stops:[0,.5,1,1.5,2,3,4.5,7],colors:['#245a8e','#25c3be','#79e8bf','#dff2a1','#fed56e','#f59745','#db4a78','#802caa']},
+ swell:{type:'wave',field:'swell_wave_height',dir:'swell_wave_direction',label:'Primary swell height',unit:'m',stops:[0,.4,.8,1.2,1.8,2.5,3.5,5],colors:['#275790','#2ab8d5','#67e2bd','#c4eb90','#f8d45b','#ee9c42','#d24b7e','#802caa']},
+ period:{type:'wave',field:'swell_wave_period',dir:'swell_wave_direction',label:'Swell period',unit:'s',stops:[0,4,6,8,10,12,15,20],colors:['#29558a','#38b7d1','#61dbc7','#b0eb9a','#f1d579','#f5a24d','#d9577b','#9a4ca8']}
+};
+const WIND_VARS='wind_speed_10m,wind_direction_10m,wind_gusts_10m';
+const WAVE_VARS='wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period';
+const CACHE_TTL=15*60000, COLS=7, ROWS=5;
+let layer='wind',windModel='best_match',waveModel='best_match',alpha=.74,arrows=true,shading=true;
+let timeline=[],hour=0,playTimer=0,playing=false,grid=null,gridSeq=0,pointSeq=0,fetchTimer=0,hoverPoint=null,point={lat:PLACES.kovalam.lat,lon:PLACES.kovalam.lon,name:PLACES.kovalam.name},pointData={wind:null,wave:null,tide:null};
+const cache=new Map();
+const ctx=$('fieldCanvas').getContext('2d',{alpha:true});
+const map=L.map('map',{zoomControl:false,preferCanvas:true,minZoom:3,maxZoom:11,worldCopyJump:false}).setView([12.85,81.2],8);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'}).addTo(map);
+L.control.zoom({position:'bottomright'}).addTo(map);
+const pointMarker=L.circleMarker([point.lat,point.lon],{radius:6,weight:2,color:'#ffffff',fillColor:'#54dcff',fillOpacity:1}).addTo(map);
+function setStatus(msg,kind){$('status').textContent=msg;$('status').className='pill'+(kind?' '+kind:'');}
+function num(v){return typeof v==='number'&&Number.isFinite(v);}
+function fmt(v,dec){return num(v)?v.toFixed(dec):'—';}
+function dirName(d){if(!num(d))return '—';return ['N','NE','E','SE','S','SW','W','NW'][Math.round(((d%360)+360)%360/45)%8];}
+function parseTime(t){if(typeof t!=='string')return NaN;return Date.parse(t.endsWith('Z')?t:t+'Z');}
+function reqUrl(type,pts,model,vars){
+ const params=new URLSearchParams();
+ params.set('latitude',pts.map(p=>p.lat.toFixed(4)).join(','));
+ params.set('longitude',pts.map(p=>p.lon.toFixed(4)).join(','));
+ params.set('hourly',vars);params.set('timezone','UTC');params.set('past_days','1');params.set('forecast_days','7');params.set('models',model);params.set('cell_selection',type==='wave'?'sea':'nearest');
+ if(type==='wind')params.set('wind_speed_unit','kn');
+ return (type==='wind'?'https://api.open-meteo.com/v1/forecast':'https://marine-api.open-meteo.com/v1/marine')+'?'+params.toString();
+}
+async function jsonFetch(url){
+ const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),18000);
+ try{const res=await fetch(url,{signal:abort.signal,cache:'no-store'});const data=await res.json();if(!res.ok||data.error)throw Error(data.reason||'HTTP '+res.status);return data;}finally{clearTimeout(timeout);}
+}
+function normalise(raw,count){
+ const list=Array.isArray(raw)?raw:[raw];
+ if(list.length!==count)throw Error('Location count mismatch from model API');
+ return list.map(x=>{if(!x||!x.hourly||!Array.isArray(x.hourly.time))return null;
+  const indices=new Map(x.hourly.time.map((t,i)=>[t,i]));
+  return {hourly:x.hourly,indices,lat:x.latitude,lon:x.longitude};
+ });
+}
+function sample(entry,key,ms){
+ if(!entry)return null;
+ const iso=new Date(ms).toISOString().slice(0,16);
+ const idx=entry.indices.get(iso);
+ if(idx===undefined)return null;
+ const v=entry.hourly[key]?.[idx];
+ return num(v)?v:null;
+}
+function setTimeline(entry){
+ if(timeline.length||!entry)return;
+ const all=entry.hourly.time.map(parseTime).filter(Number.isFinite);
+ if(!all.length)return;
+ timeline=all;
+ let nearest=0,dist=Infinity;
+ const now=Date.now();
+ all.forEach((t,i)=>{const d=Math.abs(t-now);if(d<dist){nearest=i;dist=d;}});
+ hour=nearest;
+ $('timeSlider').max=String(all.length-1);$('timeSlider').disabled=false;syncTimeline();
+}
+function t(){return timeline[hour]??Date.now();}
+function nowIndex(){if(!timeline.length)return 0;return timeline.reduce((best,v,i)=>Math.abs(v-Date.now())<Math.abs(timeline[best]-Date.now())?i:best,0);}
+function syncTimeline(){
+ if(!timeline.length)return;
+ $('timeLabel').textContent=IST.format(new Date(t()));
+ $('timeSub').textContent=new Date(t()).toISOString().slice(0,16).replace('T',' ')+' UTC · '+(hour+1)+' / '+timeline.length+' hourly frames';
+ $('timeSlider').value=String(hour);$('prev').disabled=hour===0;$('next').disabled=hour===timeline.length-1;
+ const ticks=[0,.25,.5,.75,1].map(f=>timeline[Math.min(timeline.length-1,Math.round((timeline.length-1)*f))]);
+ $('ruler').replaceChildren(...ticks.map(ms=>{const s=document.createElement('span');s.textContent=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',hour:'2-digit',hour12:true}).format(new Date(ms));return s;}));
+ $('modelBadge').textContent=FIELDS[layer].label+' · '+(FIELDS[layer].type==='wind'?MODELS_WIND[windModel]:MODELS_WAVE[waveModel]);
+ draw();updateMetrics();drawTide();
+}
+function stopPlay(){playing=false;clearTimeout(playTimer);$('play').textContent='▶';}
+function step(d){if(!timeline.length)return;hour=Math.max(0,Math.min(timeline.length-1,hour+d));syncTimeline();}
+function playNext(){if(!playing)return;playTimer=setTimeout(()=>{if(hour===timeline.length-1){stopPlay();return;}step(1);playNext();},550);}
+function locationGrid(){
+ const size=map.getSize(),points=[];
+ for(let row=0;row<ROWS;row++)for(let col=0;col<COLS;col++){
+   const px=(col/(COLS-1))*size.x,py=(row/(ROWS-1))*size.y;
+   const ll=map.containerPointToLatLng([px,py]);
+   points.push({lat:Math.max(-75,Math.min(75,ll.lat)),lon:Math.max(-179.9,Math.min(179.9,ll.lng))});
+ }
+ return points;
+}
+function gridKey(type,model,positions){
+ return type+'|'+model+'|'+map.getZoom()+'|'+positions.map(p=>p.lat.toFixed(2)+','+p.lon.toFixed(2)).join(';');
+}
+async function loadGrid(force){
+ clearTimeout(fetchTimer);
+ const kind=FIELDS[layer].type,model=kind==='wind'?windModel:waveModel,points=locationGrid(),key=gridKey(kind,model,points),seq=++gridSeq;
+ const cached=cache.get(key);
+ if(!force&&cached&&Date.now()-cached.at<CACHE_TTL){grid=cached;draw();setStatus('✓ '+FIELDS[layer].label+' · '+(kind==='wind'?MODELS_WIND[model]:MODELS_WAVE[model])+' · cached field');return;}
+ grid=null;draw();setStatus('Loading '+(kind==='wind'?'wind':'wave')+' model at '+points.length+' map sample points…');
+ try{
+  const response=await jsonFetch(reqUrl(kind,points,model,kind==='wind'?WIND_VARS:WAVE_VARS));
+  if(seq!==gridSeq)return;
+  const values=normalise(response,points.length);
+  if(!values.some(x=>x&&x.hourly))throw Error('Model returned no hourly forecasts');
+  grid={kind,model,points,values,at:Date.now()};cache.set(key,grid);
+  if(cache.size>25)cache.delete(cache.keys().next().value);
+  setTimeline(values.find(Boolean));draw();
+  const valid=values.filter(Boolean).length;
+  setStatus('✓ '+FIELDS[layer].label+' · '+(kind==='wind'?MODELS_WIND[model]:MODELS_WAVE[model])+' · '+valid+'/'+points.length+' sample points');
+ }catch(e){
+  if(seq!==gridSeq)return;
+  grid=null;draw();setStatus('⚠ Model field unavailable: '+(e.message||'request failed')+' · try another model','bad');
+ }
+}
+function scheduleGrid(delay){clearTimeout(fetchTimer);fetchTimer=setTimeout(()=>loadGrid(false),delay);}
+function colorAt(v,spec){
+ if(!num(v))return [0,0,0];
+ const lo=spec.stops,colors=spec.colors;
+ const parse=s=>[parseInt(s.slice(1,3),16),parseInt(s.slice(3,5),16),parseInt(s.slice(5,7),16)];
+ if(v<=lo[0])return parse(colors[0]);
+ for(let i=1;i<lo.length;i++)if(v<=lo[i]){
+   const a=parse(colors[i-1]),b=parse(colors[i]),f=(v-lo[i-1])/(lo[i]-lo[i-1]);
+   return a.map((c,j)=>Math.round(c+(b[j]-c)*f));
+ }
+ return parse(colors[colors.length-1]);
+}
+function resizeCanvas(){
+ const dpr=Math.min(2,window.devicePixelRatio||1),w=map.getSize().x,h=map.getSize().y,c=$('fieldCanvas');
+ if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);c.style.width=w+'px';c.style.height=h+'px';}
+ ctx.setTransform(dpr,0,0,dpr,0,0);return {w,h};
+}
+function draw(){
+ const sz=resizeCanvas(),w=sz.w,h=sz.h;
+ ctx.clearRect(0,0,w,h);
+ if(!grid||grid.kind!==FIELDS[layer].type||grid.model!==(grid.kind==='wind'?windModel:waveModel))return;
+ const spec=FIELDS[layer],ms=t(),coords=grid.points.map(p=>map.latLngToContainerPoint([p.lat,p.lon]));
+ const value=grid.values.map(e=>sample(e,spec.field,ms)),direction=grid.values.map(e=>sample(e,spec.dir,ms));
+ if(!value.some(num)){setStatus('⚠ Selected model has no '+spec.label.toLowerCase()+' for '+IST.format(new Date(ms)),'warn');return;}
+ const p00=coords[0],p10=coords[COLS-1],p01=coords[(ROWS-1)*COLS];
+ const dx=(p10.x-p00.x)/(COLS-1),dy=(p01.y-p00.y)/(ROWS-1);
+ if(!dx||!dy)return;
+ if(shading){
+  const scale=5,sw=Math.ceil(w/scale),sh=Math.ceil(h/scale),off=document.createElement('canvas');off.width=sw;off.height=sh;
+  const oc=off.getContext('2d'),img=oc.createImageData(sw,sh),d=img.data;
+  for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){
+   const col=Math.min(COLS-1.001,Math.max(0,(x*scale-p00.x)/dx)),row=Math.min(ROWS-1.001,Math.max(0,(y*scale-p00.y)/dy));
+   const c=Math.floor(col),r=Math.floor(row),u=col-c,v=row-r;
+   const a=value[r*COLS+c],b=value[r*COLS+c+1],cc=value[(r+1)*COLS+c],dd=value[(r+1)*COLS+c+1];
+   // Do not invent a value if insufficient model cells exist.
+   if(![a,b,cc,dd].every(num))continue;
+   const n=a*(1-u)*(1-v)+b*u*(1-v)+cc*(1-u)*v+dd*u*v;
+   const rgb=colorAt(n,spec),i=(y*sw+x)*4;d[i]=rgb[0];d[i+1]=rgb[1];d[i+2]=rgb[2];d[i+3]=Math.round(alpha*225);
+  }
+  oc.putImageData(img,0,0);
+  ctx.imageSmoothingEnabled=true;ctx.drawImage(off,0,0,w,h);
+ }
+ if(arrows){
+  const stepX=Math.max(47,Math.round(w/10)),stepY=Math.max(47,Math.round(h/8));
+  for(let yy=28;yy<h;yy+=stepY)for(let xx=28;xx<w;xx+=stepX){
+   const col=Math.min(COLS-1,Math.max(0,Math.round((xx-p00.x)/dx))),row=Math.min(ROWS-1,Math.max(0,Math.round((yy-p00.y)/dy))),idx=row*COLS+col;
+   if(!num(value[idx])||!num(direction[idx]))continue;
+   const angle=(direction[idx]+90)*Math.PI/180; // FROM bearing -> TO arrow
+   const ux=Math.cos(angle),uy=Math.sin(angle),len=13;
+   ctx.strokeStyle='rgba(0,0,0,.73)';ctx.lineWidth=3.8;ctx.lineCap='round';
+   drawArrow(xx,yy,ux,uy,len);ctx.strokeStyle='rgba(245,253,255,.95)';ctx.lineWidth=1.8;drawArrow(xx,yy,ux,uy,len);
+  }
+ }
+}
+function drawArrow(x,y,ux,uy,len){
+ const x1=x-ux*len*.5,y1=y-uy*len*.5,x2=x+ux*len*.5,y2=y+uy*len*.5;
+ ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.moveTo(x2,y2);
+ ctx.lineTo(x2-ux*5-uy*4,y2-uy*5+ux*4);ctx.moveTo(x2,y2);ctx.lineTo(x2-ux*5+uy*4,y2-uy*5-ux*4);ctx.stroke();
+}
+function plotLegend(){
+ const spec=FIELDS[layer];$('legendTitle').textContent=spec.label+' · '+spec.unit;
+ const g='linear-gradient(90deg,'+spec.colors.join(',')+')';$('legendGradient').style.background=g;
+ $('legendScale').replaceChildren(...[0,2,4,7].map(i=>{const span=document.createElement('span');span.textContent=spec.stops[i]+' '+spec.unit;return span;}));
+ document.querySelectorAll('[data-layer]').forEach(b=>{const active=b.dataset.layer===layer;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
+ $('modelBadge').textContent=spec.label+' · '+(spec.type==='wind'?MODELS_WIND[windModel]:MODELS_WAVE[waveModel]);
+}
+async function loadPoint(){
+ const seq=++pointSeq,pt={...point},wModel=windModel,sModel=waveModel;
+ pointData={wind:null,wave:null,tide:null};updateMetrics();drawTide();
+ $('pointName').textContent=pt.name||'Selected ocean point';
+ $('pointCoords').textContent=Math.abs(pt.lat).toFixed(3)+'° '+(pt.lat<0?'S':'N')+' · '+Math.abs(pt.lon).toFixed(3)+'° '+(pt.lon<0?'W':'E');
+ const one=[{lat:pt.lat,lon:pt.lon}];
+ const q=[
+  ['wind',reqUrl('wind',one,wModel,WIND_VARS)],
+  ['wave',reqUrl('wave',one,sModel,WAVE_VARS)],
+  ['tide',reqUrl('wave',one,'best_match','sea_level_height_msl')]
+ ];
+ await Promise.all(q.map(async item=>{
+  try{
+   const raw=await jsonFetch(item[1]);if(seq!==pointSeq)return;
+   const data=normalise(raw,1)[0];if(!data)throw Error('No data');
+   pointData[item[0]]=data;setTimeline(data);updateMetrics();drawTide();
+  }catch(e){if(seq!==pointSeq)return;pointData[item[0]]={error:e.message||'No data'};updateMetrics();drawTide();}
+ }));
+}
+function updateMetrics(){
+ const ms=t(),w=pointData.wind&&!pointData.wind.error?pointData.wind:null,s=pointData.wave&&!pointData.wave.error?pointData.wave:null;
+ const speed=sample(w,'wind_speed_10m',ms),from=sample(w,'wind_direction_10m',ms),gust=sample(w,'wind_gusts_10m',ms);
+ const waves=sample(s,'wave_height',ms),wDir=sample(s,'wave_direction',ms),swell=sample(s,'swell_wave_height',ms),sDir=sample(s,'swell_wave_direction',ms),period=sample(s,'swell_wave_period',ms);
+ $('mWind').textContent=num(speed)?fmt(speed,1)+' kn':'—';$('dWind').textContent=(num(from)?dirName(from)+' from':'No direction')+(num(gust)?' · gust '+fmt(gust,0)+' kn':'');
+ $('mWaves').textContent=num(waves)?fmt(waves,1)+' m':'—';$('dWaves').textContent=num(wDir)?dirName(wDir)+' from':'No wave direction';
+ $('mSwell').textContent=num(swell)?fmt(swell,1)+' m':'—';$('dSwell').textContent=num(sDir)?dirName(sDir)+' from':'No swell direction';
+ $('mPeriod').textContent=num(period)?fmt(period,1)+' s':'—';$('dPeriod').textContent='Primary swell · '+MODELS_WAVE[waveModel];
+ if(pointData.wind?.error)$('dWind').textContent='Unavailable: '+pointData.wind.error.slice(0,34);
+ if(pointData.wave?.error)$('dWaves').textContent='Unavailable: '+pointData.wave.error.slice(0,34);
+}
+function tideExtrema(entry){
+ const h=entry.hourly,v=h.sea_level_height_msl||[],out=[];
+ for(let i=1;i<v.length-1;i++){
+  const a=v[i-1],b=v[i],c=v[i+1],ms=parseTime(h.time[i]);
+  if(![a,b,c].every(num)||!Number.isFinite(ms))continue;
+  if(b>a&&b>=c)out.push({type:'High',h:b,ms});
+  if(b<a&&b<=c)out.push({type:'Low',h:b,ms});
+ }
+ return out;
+}
+function drawTide(){
+ const can=$('tideChart'),dpr=Math.min(2,window.devicePixelRatio||1),cw=can.clientWidth||280,ch=can.clientHeight||115;
+ can.width=Math.round(cw*dpr);can.height=Math.round(ch*dpr);const c=can.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+ c.clearRect(0,0,cw,ch);c.font='10px system-ui';c.fillStyle='#b8d2e3';
+ const entry=pointData.tide;
+ if(!entry||entry.error||!entry.hourly){
+  $('tideNow').textContent=entry?.error?'Unavailable':'Loading…';$('tideEvents').textContent=entry?.error?'Tide API: '+entry.error:'Waiting for tidal data…';c.fillText('No tide chart yet',10,55);return;
+ }
+ const time=t(),lo=time-12*3600000,hi=time+30*3600000;
+ const series=entry.hourly.time.map((s,i)=>({ms:parseTime(s),v:entry.hourly.sea_level_height_msl?.[i]})).filter(p=>p.ms>=lo&&p.ms<=hi&&num(p.v));
+ if(series.length<5){$('tideNow').textContent='No data';$('tideEvents').textContent='No tide/sea-level forecast available for this time or location';c.fillText('No data at this forecast hour',10,55);return;}
+ const min=Math.min(...series.map(p=>p.v)),max=Math.max(...series.map(p=>p.v)),padding=Math.max(.1,(max-min)*.2),a=min-padding,b=max+padding;
+ const px=ms=>8+(ms-lo)/(hi-lo)*(cw-16),py=v=>9+(b-v)/(b-a)*(ch-29);
+ c.strokeStyle='#3c5e70';c.lineWidth=1;
+ for(let i=0;i<3;i++){const y=py(a+(b-a)*i/2);c.beginPath();c.moveTo(8,y);c.lineTo(cw-7,y);c.stroke();}
+ c.strokeStyle='#62dce8';c.lineWidth=2;c.beginPath();series.forEach((p,i)=>{if(i===0)c.moveTo(px(p.ms),py(p.v));else c.lineTo(px(p.ms),py(p.v));});c.stroke();
+ c.strokeStyle='#ffd877';c.setLineDash([4,4]);c.beginPath();c.moveTo(px(time),8);c.lineTo(px(time),ch-19);c.stroke();c.setLineDash([]);
+ c.fillStyle='#a8c5d9';c.fillText('-12h',8,ch-5);c.fillText('Selected',Math.max(60,px(time)-25),ch-5);c.fillText('+30h',cw-35,ch-5);
+ const value=sample(entry,'sea_level_height_msl',time);$('tideNow').textContent=num(value)?(value>=0?'+':'')+fmt(value,2)+' m MSL':'Hourly data N/A';
+ const events=tideExtrema(entry).filter(e=>e.ms>=time-2*3600000&&e.ms<=time+36*3600000).slice(0,5);
+ $('tideEvents').replaceChildren(...(events.length?events.map(ev=>{const d=document.createElement('div');d.textContent=(ev.type==='High'?'▲ ':'▼ ')+ev.type+' · '+IST.format(new Date(ev.ms))+' · '+(ev.h>=0?'+':'')+fmt(ev.h,2)+' m MSL';return d;}):[document.createTextNode('No reliable high/low extrema in the selected window')]));
+}
+function setPoint(p,name){
+ point={lat:p.lat,lon:p.lng??p.lon,name:name||'Selected location'};pointMarker.setLatLng([point.lat,point.lon]);loadPoint();
+}
+document.querySelectorAll('[data-layer]').forEach(b=>b.onclick=()=>{layer=b.dataset.layer;plotLegend();draw();scheduleGrid(20);$('sidebar').classList.remove('open');});
+$('windModel').onchange=e=>{windModel=e.target.value;if(FIELDS[layer].type==='wind')scheduleGrid(20);loadPoint();syncTimeline();};
+$('waveModel').onchange=e=>{waveModel=e.target.value;if(FIELDS[layer].type==='wave')scheduleGrid(20);loadPoint();syncTimeline();};
+document.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>{const p=PLACES[b.dataset.place];map.setView([p.lat,p.lon],p.z);setPoint(p,p.name);$('sidebar').classList.remove('open');});
+$('opacity').oninput=e=>{alpha=+e.target.value/100;$('opacityLabel').textContent=e.target.value+'%';draw();};
+$('arrows').onchange=e=>{arrows=e.target.checked;draw();};$('shading').onchange=e=>{shading=e.target.checked;draw();};
+$('refreshGrid').onclick=()=>{cache.clear();loadGrid(true);loadPoint();};
+$('topRefresh').onclick=()=>{cache.clear();loadGrid(true);loadPoint();};
+$('timeSlider').oninput=e=>{stopPlay();hour=+e.target.value;syncTimeline();};
+$('prev').onclick=()=>{stopPlay();step(-1);};$('next').onclick=()=>{stopPlay();step(1);};
+$('now').onclick=()=>{stopPlay();hour=nowIndex();syncTimeline();};
+$('play').onclick=()=>{if(playing){stopPlay();return;}if(!timeline.length)return;if(hour===timeline.length-1)hour=nowIndex();playing=true;$('play').textContent='Ⅱ';syncTimeline();playNext();};
+$('mobilePanel').onclick=()=>{const open=$('sidebar').classList.toggle('open');$('mobilePanel').setAttribute('aria-expanded',String(open));};
+map.on('click',e=>setPoint(e.latlng));
+map.on('moveend zoomend resize',()=>{draw();scheduleGrid(750);});
+window.addEventListener('resize',()=>{map.invalidateSize();draw();drawTide();});
+plotLegend();draw();loadPoint();scheduleGrid(300);
+})();
+</script>
+</body></html>
