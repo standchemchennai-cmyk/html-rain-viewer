@@ -6,6 +6,7 @@
 @media(max-width:800px){.sidebar{width:225px;padding:15px 11px 135px}.brand strong{font-size:15px}.top{padding:0 11px}}
 @media(max-width:680px){.top{height:53px}.top-right{display:none}.sidebar{position:absolute;top:53px;bottom:0;left:0;width:min(302px,87vw);transform:translateX(-108%);transition:transform .2s;box-shadow:10px 0 35px #0008;z-index:50;padding-bottom:170px}.sidebar.open{transform:translateX(0)}.menu{display:block}.layers{top:9px;left:9px;padding:9px 10px}.tiny-title{display:none}.check-wrap{gap:8px 12px}.check-wrap label{font-size:11px}.check-wrap input{height:16px;width:16px}.layers .micro{font-size:9px}.zoomtools{top:9px;right:8px}.zoomtools button{height:31px;width:31px}.status{top:75px;left:9px;max-width:78%}.status div{font-size:9px;padding:5px 7px}.timeline{bottom:6px;left:6px;right:6px;padding:10px 11px}.when{font-size:15px}.time-desc{font-size:9px}.playtools{gap:4px}.playtools button{width:31px;height:32px;font-size:15px}.legend{bottom:159px;right:8px;padding:7px 9px}.spectrum{width:150px}.legend p{font-size:9px}.osm-attribution{bottom:148px;font-size:9px}.footline{font-size:9px}}
 @media(max-width:380px){.brand strong{font-size:13px}.layers .micro{display:none}.check-wrap{gap:7px}.check-wrap label{font-size:10px}.legend{max-width:165px}}
+.lightning-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 </style>
 <!-- This SVG LUT highlights cold IR cloud tops. It is NOT rain intensity. -->
 <svg width="0" height="0" style="position:absolute;pointer-events:none"><defs>
@@ -25,8 +26,8 @@
 <div class="side-section"><h3>Imagery and colours</h3><label for="satMode" class="muted">Satellite colour mode</label><select id="satMode"><option value="enhanced">Enhanced infrared · orange/red tops</option><option value="gray">Infrared · black and white</option><option value="water">Water vapour · JMA Himawari</option></select><p class="muted">Official JMA cloud-top enhancement shows high cloud tops in colour. <b>Orange/red indicates cloud temperature, NOT a direct rainfall measurement.</b> Radar is a separate, optional precipitation layer.</p></div>
 <div class="side-section"><h3>Opacity</h3><div class="op-row"><span>☁ Satellite</span><span id="sv">66%</span></div><input aria-label="Satellite opacity" class="range" type="range" id="so" min="0" max="100" value="66"><div class="op-row"><span>🌧 Radar</span><span id="rv">75%</span></div><input aria-label="Radar opacity" class="range" type="range" id="ro" min="0" max="100" value="75"><div class="op-row"><span>⚡ Lightning</span><span id="lv">100%</span></div><input aria-label="Lightning opacity" class="range" type="range" id="lo" min="0" max="100" value="100"></div>
 <div class="side-section"><h3>Jump to area</h3><div class="presets"><button data-area="chennai">Chennai</button><button data-area="coast">ECR coast</button><button data-area="tamil">Tamil Nadu</button><button data-area="bay">Bay of Bengal</button><button data-area="india">All India</button></div></div>
-<div class="side-section"><h3>Map layers & data</h3><p class="muted">Basemap: Esri World Topographic Map (real roads/places). Satellite: Japan Meteorological Agency (JMA), Himawari full-disk enhanced cloud-top imagery, with published frame timestamps (may have poorer detail at the western edge near Chennai). Radar: RainViewer (approximately 2 h archive, limited Indian coverage). Lightning: LightningMaps community overlay (live only; third-party access is not guaranteed).</p><p class="muted">The timeline is built only from satellite times that JMA actually publishes. The map is independent of the weather feeds. Lightning only appears at Latest and can never represent historical strikes.</p><p class="muted"><a href="https://www.jma.go.jp/bosai/himawari/" target="_blank" rel="noopener">JMA satellite viewer ↗</a> · <a href="https://mausam.imd.gov.in/chennai/index_radar.php" target="_blank" rel="noopener">IMD Chennai radar ↗</a> · <a href="https://www.lightningmaps.org/" target="_blank" rel="noopener">Official lightning viewer ↗</a></p></div>
-</aside><main class="main"><div id="map" class="map"><div class="fallback-bg"></div><div id="basePane" class="map-pane" style="z-index:2"></div><div id="satPane" class="map-pane" style="z-index:3"></div><div id="radPane" class="map-pane" style="z-index:4"></div><div id="litPane" class="map-pane" style="z-index:5"></div><div id="labels" class="map-pane" style="z-index:6"></div><div id="osmFallback" class="fallback-text">Loading street map…</div></div>
+<div class="side-section"><h3>Map layers & data</h3><p class="muted">Basemap: Esri World Topographic Map (real roads/places). Satellite: Japan Meteorological Agency (JMA), Himawari full-disk enhanced cloud-top imagery, with published frame timestamps (may have poorer detail at the western edge near Chennai). Radar: RainViewer (approximately 2 h archive, limited Indian coverage). Lightning: LightningMaps community overlay (live only; third-party access is not guaranteed).</p><p class="muted">The timeline is built only from satellite times that JMA actually publishes. The map is independent of the weather feeds. Lightning strikes are always LIVE, including while viewing historical satellite imagery. They do not correspond to the selected historic frame.</p><p class="muted"><a href="https://www.jma.go.jp/bosai/himawari/" target="_blank" rel="noopener">JMA satellite viewer ↗</a> · <a href="https://mausam.imd.gov.in/chennai/index_radar.php" target="_blank" rel="noopener">IMD Chennai radar ↗</a> · <a href="https://www.lightningmaps.org/" target="_blank" rel="noopener">Official lightning viewer ↗</a></p></div>
+</aside><main class="main"><div id="map" class="map"><div class="fallback-bg"></div><div id="basePane" class="map-pane" style="z-index:2"></div><div id="satPane" class="map-pane" style="z-index:3"></div><div id="radPane" class="map-pane" style="z-index:4"></div><div id="litPane" class="map-pane" style="z-index:5"></div><div id="strikePane" class="map-pane" style="z-index:5"></div><div id="labels" class="map-pane" style="z-index:6"></div><div id="osmFallback" class="fallback-text">Loading street map…</div></div>
 <div class="layers map-ui"><div class="tiny-title">Visible overlays</div><div class="check-wrap"><label><input id="satCheck" type="checkbox" checked><span>☁ Satellite IR</span></label><label><input id="radCheck" type="checkbox"><span>🌧 Radar</span></label><label><input id="litCheck" type="checkbox" checked><span>⚡ Lightning</span></label></div><div class="micro">All three can be switched on/off independently</div></div>
 <div class="zoomtools map-ui"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomOut" aria-label="Zoom out">−</button><button id="home" title="Back to Chennai">⌂</button></div>
 <div class="status map-ui"><div id="baseStatus" class="warn">Map: opening Esri World Topographic Map…</div><div id="satStatus" class="warn">Satellite: connecting…</div><div id="radStatus">Radar: turned off</div><div id="litStatus">Lightning: live only</div></div>
@@ -56,22 +57,83 @@ function tileSpecs(cap){const W=$('map').clientWidth,H=$('map').clientHeight,z=M
  for(let y=lowY;y<=highY;y++)for(let x=lowX;x<=highX;x++){if(y<0||y>=n)continue;out.push({z,x:((x%n)+n)%n,y,key:`${z}/${x}/${y}`,left:(x*SIZE-p.x+W/(2*scale))*scale,top:(y*SIZE-p.y+H/(2*scale))*scale,size:SIZE*scale});}
  return out;}
 function tiles(layer,cap,urlFn){const map=layer==='base'?baseTiles:layer==='rad'?radTiles:litTiles,pane=tilePanes[layer];
- const active=layer==='base'||layer==='rad'&&checks.rad&&radFrame||layer==='lit'&&checks.lit&&index===frames.length-1;
+ const active=layer==='base'||layer==='rad'&&checks.rad&&radFrame||layer==='lit'&&checks.lit&&!litConnected;
  pane.style.display=active?'block':'none';pane.style.opacity=layer==='base'?1:alpha[layer];if(!active){map.forEach(x=>x.remove());map.clear();return;}
  const wanted=new Set();for(const v of tileSpecs(cap)){const src=urlFn(v.z,v.x,v.y);if(!src)continue;const key=v.key+'|'+src;wanted.add(key);let el=map.get(key);
  if(!el){el=new Image();el.className='tile';el.alt='';el.loading='lazy';el.decoding='async';el.draggable=false;
- el.onload=()=>{if(layer==='base'){hasBase=true;status('baseStatus','✓ Street map loaded','ok');$('osmFallback').style.display='none';}if(layer==='rad')status('radStatus','✓ Radar image tile loaded','ok');if(layer==='lit')status('litStatus','✓ Lightning overlay image tile loaded (not confirmation of strikes)','ok');};
- el.onerror=()=>{if(layer==='base'&&!hasBase){status('baseStatus','⚠ Basemap unavailable — check connection','err');$('osmFallback').style.display='block';$('osmFallback').textContent='Basemap is not responding. Check internet or try Refresh.';}if(layer==='rad')status('radStatus','Radar tiles not available at this time / location','warn');if(layer==='lit')status('litStatus','Community lightning server unavailable; use official viewer link','warn');};
+ el.onload=()=>{if(layer==='base'){hasBase=true;status('baseStatus','✓ Street map loaded','ok');$('osmFallback').style.display='none';}if(layer==='rad')status('radStatus','✓ Radar image tile loaded','ok');if(layer==='lit'&&!litConnected)status('litStatus','⚡ Lightning tile fallback loaded; may have no nearby strikes','warn');};
+ el.onerror=()=>{if(layer==='base'&&!hasBase){status('baseStatus','⚠ Basemap unavailable — check connection','err');$('osmFallback').style.display='block';$('osmFallback').textContent='Basemap is not responding. Check internet or try Refresh.';}if(layer==='rad')status('radStatus','Radar tiles not available at this time / location','warn');if(layer==='lit'&&!litConnected)status('litStatus','⚠ Lightning tile server unavailable; use official viewer link','warn');};
  pane.append(el);map.set(key,el);el.src=src;}
  el.style.left=v.left+'px';el.style.top=v.top+'px';el.style.width=v.size+'px';el.style.height=v.size+'px';}
  for(const [key,el] of map){if(!wanted.has(key)){el.remove();map.delete(key);}}
 }
 function labels(){const W=$('map').clientWidth,H=$('map').clientHeight,p=merc(center.lat,center.lon,zoom),el=$('labels');el.replaceChildren();for(const [name,lat,lon,major] of CITIES){if(!major&&zoom<8)continue;const q=merc(lat,lon,zoom),x=q.x-p.x+W/2,y=q.y-p.y+H/2;if(x<0||y<0||x>W||y>H)continue;const c=document.createElement('div');c.className='citymark'+(major?' major':'');c.textContent=name;c.style.left=x+'px';c.style.top=y+'px';el.append(c);}}
 function nearestRadar(){if(!moment())return null;let best=null,d=Infinity;for(const r of radarFrames){let t=Math.abs(r.time*1000-moment());if(t<d){best=r;d=t;}}return d<=10*60000?best:null;}
+
+/* Community LightningMaps real-time stream, with existing image tiles as fallback.
+   The third-party stream is undocumented and may change without notice. */
+const litCanvas=document.createElement('canvas');litCanvas.className='lightning-canvas';$('strikePane').append(litCanvas);
+const litCtx=litCanvas.getContext('2d'),strikes=new Map();let litConnected=false,litSocket=null,litRetry=0,litBackoff=5000,litSubscribeTimer=0;
+const LIT_WINDOW=20*60000;
+function lightningSubscription(){
+ const W=$('map').clientWidth,H=$('map').clientHeight,p=merc(center.lat,center.lon,zoom);
+ const ne=inverse(p.x+W/2,p.y-H/2,zoom),sw=inverse(p.x-W/2,p.y+H/2,zoom);
+ return JSON.stringify({v:24,i:{},s:false,x:0,w:0,tx:0,tw:1,a:4,z:zoom,b:true,h:'',l:1,t:1,p:[ne.lat,ne.lon,sw.lat,sw.lon],r:'A'});
+}
+function sendLightningSubscription(){if(litSocket&&litSocket.readyState===WebSocket.OPEN)litSocket.send(lightningSubscription());}
+function queueLightningSubscription(){clearTimeout(litSubscribeTimer);if(litConnected)litSubscribeTimer=setTimeout(sendLightningSubscription,900);}
+function refreshLightningTiles(){const t=Math.floor(Date.now()/30000)*30;tiles('lit',8,(z,x,y)=>'https://tiles.lightningmaps.org/?x='+x+'&y='+y+'&z='+z+'&s=256&t=5&T='+t);}
+function drawLightning(){
+ const pane=$('strikePane');pane.style.display=checks.lit&&litConnected?'block':'none';pane.style.opacity=alpha.lit;
+ if(!checks.lit||!litConnected||!litCtx)return;
+ const W=$('map').clientWidth,H=$('map').clientHeight,dpr=window.devicePixelRatio||1;
+ if(litCanvas.width!==Math.round(W*dpr)||litCanvas.height!==Math.round(H*dpr)){litCanvas.width=Math.round(W*dpr);litCanvas.height=Math.round(H*dpr);}
+ litCtx.setTransform(dpr,0,0,dpr,0,0);litCtx.clearRect(0,0,W,H);
+ const now=Date.now(),p=merc(center.lat,center.lon,zoom),world=256*2**zoom;let visible=0,last=0;
+ for(const [id,s] of strikes){
+  const age=now-s.time;if(age>LIT_WINDOW||age< -60000){strikes.delete(id);continue;}
+  const q=merc(s.lat,s.lon,zoom);let dx=q.x-p.x;if(dx>world/2)dx-=world;else if(dx< -world/2)dx+=world;
+  const x=dx+W/2,y=q.y-p.y+H/2;if(x< -12||x>W+12||y< -12||y>H+12)continue;
+  visible++;last=Math.max(last,s.time);
+  const fresh=age<120000,r=fresh?5:3.5;
+  litCtx.beginPath();litCtx.arc(x,y,r+3,0,Math.PI*2);litCtx.fillStyle=fresh?'rgba(255,244,110,.22)':'rgba(255,120,50,.13)';litCtx.fill();
+  litCtx.beginPath();litCtx.arc(x,y,r,0,Math.PI*2);litCtx.fillStyle=fresh?'#fff7a4':age<600000?'#ffb44e':'#df6650';litCtx.fill();
+  litCtx.strokeStyle='#2b110b';litCtx.lineWidth=1;litCtx.stroke();
+ }
+ const ageText=last?' · newest '+Math.max(0,Math.round((now-last)/60000))+'m ago':' · no strikes received in view';
+ const frameText=frames.length&&index!==frames.length-1?' · live overlay on historical IR':'';
+ status('litStatus','✓ Lightning LIVE · '+visible+' strikes'+ageText+frameText,'ok');
+}
+function connectLightning(){
+ if(!checks.lit||typeof WebSocket==='undefined')return;
+ if(litSocket&&(litSocket.readyState===WebSocket.CONNECTING||litSocket.readyState===WebSocket.OPEN))return;
+ clearTimeout(litRetry);status('litStatus','Lightning: connecting to live stream; using tile fallback…','warn');
+ try{
+  const sock=new WebSocket('wss://live2.lightningmaps.org/');litSocket=sock;
+  sock.onopen=()=>{if(litSocket!==sock)return;if(!checks.lit){sock.close();return;}litConnected=true;litBackoff=5000;sendLightningSubscription();redraw();};
+  sock.onmessage=e=>{
+   if(litSocket!==sock)return;let data;try{data=JSON.parse(e.data);}catch(_){return;}
+   if(!Array.isArray(data.strokes))return;
+   const now=Date.now();for(const s of data.strokes){
+    const lat=Number(s.lat),lon=Number(s.lon),time=Number(s.time);
+    if(!Number.isFinite(lat)||!Number.isFinite(lon)||!Number.isFinite(time)||Math.abs(lat)>90||Math.abs(lon)>180||now-time>LIT_WINDOW||time>now+60000)continue;
+    strikes.set(s.id!=null?String(s.id):lat+','+lon+','+time,{lat,lon,time});
+   }
+   while(strikes.size>3000)strikes.delete(strikes.keys().next().value);drawLightning();
+  };
+  sock.onerror=()=>{if(litSocket===sock&&!litConnected)status('litStatus','⚠ Live lightning connection error; trying image tiles','warn');};
+  sock.onclose=()=>{if(litSocket!==sock)return;litSocket=null;litConnected=false;redraw();if(checks.lit){status('litStatus','⚠ Live stream disconnected; tile fallback, retrying','warn');litRetry=setTimeout(connectLightning,litBackoff);litBackoff=Math.min(60000,litBackoff*2);}};
+ }catch(e){litSocket=null;litConnected=false;refreshLightningTiles();status('litStatus','⚠ Live stream unavailable; tile fallback','warn');litRetry=setTimeout(connectLightning,litBackoff);litBackoff=Math.min(60000,litBackoff*2);}
+}
+function toggleLightning(){
+ if(!checks.lit){clearTimeout(litRetry);clearTimeout(litSubscribeTimer);if(litSocket){const old=litSocket;litSocket=null;old.close();}litConnected=false;strikes.clear();}
+ else connectLightning();
+}
+
 function redraw(){tiles('base',12,(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/${z}/${y}/${x}`);radFrame=nearestRadar();tiles('rad',7,(z,x,y)=>radFrame?`${radarHost}${radFrame.path}/256/${z}/${x}/${y}/2/1_0.png`:null);
- tiles('lit',8,(z,x,y)=>`https://tiles.lightningmaps.org/?x=${x}&y=${y}&z=${z}&s=256&t=5&T=${Math.floor(Date.now()/120000)*120}`);labels();
+ refreshLightningTiles();drawLightning();queueLightningSubscription();labels();
  if(checks.rad&&!radFrame)status('radStatus',radarError?'Radar: '+radarError:'Radar: no frame this far back (only ~2h archive)','warn');else if(!checks.rad)status('radStatus','Radar: switched off');
- if(!checks.lit)status('litStatus','Lightning: switched off');else if(index!==frames.length-1)status('litStatus','Lightning: live only — switch to Latest to see it','warn');}
+ if(!checks.lit)status('litStatus','Lightning: switched off');}
 function satURL(f,mode,v){const band=mode==='enhanced'?'SND/ETC':mode==='gray'?'B13/TBB':'B08/TBB';return `https://www.jma.go.jp/bosai/himawari/data/satimg/${f.base}/fd/${f.valid}/${band}/${v.z}/${v.x}/${v.y}.jpg`;}
 function satellite(){clearTimeout(satTimer);if(!checks.sat){satSeq++;$('satPane').style.display='none';status('satStatus','Satellite switched off');$('frameStatus').textContent='Satellite switched off';playNext();return;}
  const f=frames[index];if(!f){status('satStatus',apiError?'⚠ '+apiError:'Waiting for JMA satellite time list…','warn');$('frameStatus').textContent='Loading published satellite timestamps…';$('satPane').replaceChildren();return;}
@@ -101,9 +163,9 @@ function setPlace(lat,lon,z){center={lat,lon};zoom=z;redraw();queueSat(330);}
 function zoomBy(d){zoom=Math.min(12,Math.max(3,zoom+d));redraw();queueSat(300);}
 $('play').onclick=()=>{if(playing){stopPlay();return;}if(!frames.length)return;if(index>=frames.length-1)index=0;playing=true;$('play').textContent='Ⅱ';updateTime();};
 $('prev').onclick=()=>{stopPlay();index=Math.max(0,index-1);updateTime();};$('next').onclick=()=>{stopPlay();index=Math.min(frames.length-1,index+1);updateTime();};$('latest').onclick=()=>{stopPlay();index=frames.length-1;updateTime();};
-$('slider').oninput=e=>{stopPlay();index=+e.target.value;updateTime();};$('refresh').onclick=()=>{stopPlay();getTimes();getRadar();};
-for(const [key,id] of [['sat','satCheck'],['rad','radCheck'],['lit','litCheck']])$(id).onchange=e=>{checks[key]=e.target.checked;updateTime();};
-for(const [key,id,out] of [['sat','so','sv'],['rad','ro','rv'],['lit','lo','lv']])$(id).oninput=e=>{alpha[key]=+e.target.value/100;$(out).textContent=e.target.value+'%';if(key==='sat')$('satPane').style.opacity=alpha.sat;else tilePanes[key].style.opacity=alpha[key];};
+$('slider').oninput=e=>{stopPlay();index=+e.target.value;updateTime();};$('refresh').onclick=()=>{stopPlay();getTimes();getRadar();if(checks.lit){if(litConnected)sendLightningSubscription();else connectLightning();refreshLightningTiles();}};
+for(const [key,id] of [['sat','satCheck'],['rad','radCheck'],['lit','litCheck']])$(id).onchange=e=>{checks[key]=e.target.checked;if(key==='lit')toggleLightning();updateTime();};
+for(const [key,id,out] of [['sat','so','sv'],['rad','ro','rv'],['lit','lo','lv']])$(id).oninput=e=>{alpha[key]=+e.target.value/100;$(out).textContent=e.target.value+'%';if(key==='sat')$('satPane').style.opacity=alpha.sat;else if(key==='lit'){$('strikePane').style.opacity=alpha.lit;tilePanes.lit.style.opacity=alpha.lit;}else tilePanes[key].style.opacity=alpha[key];};
 $('satMode').onchange=updateTime;$('zoomIn').onclick=()=>zoomBy(1);$('zoomOut').onclick=()=>zoomBy(-1);$('home').onclick=()=>setPlace(...PLACES.chennai);
 $('openMenu').onclick=()=>$('sidebar').classList.toggle('open');document.querySelectorAll('[data-area]').forEach(b=>b.onclick=()=>{setPlace(...PLACES[b.dataset.area]);$('sidebar').classList.remove('open');});
 $('map').addEventListener('wheel',e=>{e.preventDefault();zoomBy(e.deltaY<0?1:-1);},{passive:false});const pts=new Map();let drag=null,pinch=0;
@@ -111,6 +173,6 @@ $('map').addEventListener('pointerdown',e=>{e.preventDefault();e.currentTarget.s
 $('map').addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;const p=pts.get(e.pointerId);p.x=e.clientX;p.y=e.clientY;if(pts.size===1&&drag){pan(e.clientX-drag.x,e.clientY-drag.y);drag={x:e.clientX,y:e.clientY};}else if(pts.size===2){const a=[...pts.values()],dist=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(dist>pinch*1.3){zoomBy(1);pinch=dist;}else if(dist<pinch*.77){zoomBy(-1);pinch=dist;}}});
 for(const type of ['pointerup','pointercancel'])$('map').addEventListener(type,e=>{pts.delete(e.pointerId);if(!pts.size){drag=null;$('map').classList.remove('drag');}else{drag={...[...pts.values()][0]};}});
 window.addEventListener('resize',()=>{redraw();queueSat(550);});
-redraw();getTimes();getRadar();setInterval(()=>{if(!playing)getRadar();},300000);
+redraw();connectLightning();getTimes();getRadar();setInterval(()=>{if(!playing)getRadar();},300000);setInterval(()=>{if(!document.hidden){drawLightning();if(checks.lit&&!litConnected)refreshLightningTiles();}},30000);
 })();
 </script></body></html>
