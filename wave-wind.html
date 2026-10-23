@@ -62,6 +62,7 @@
       <option value="osm">OpenStreetMap · street map</option>
     </select>
     <p class="muted">Esri is the default. Missing tiles retry on alternate Esri endpoints before OpenStreetMap.</p>
+    <button id="retryMap" class="refresh-button" type="button">↻ Retry missing map tiles</button>
     <div class="presets">
       <button data-place="kovalam">Kovalam / ECR</button><button data-place="pondy">Pondicherry</button>
       <button data-place="chennai">Chennai</button><button data-place="bay">Bay of Bengal</button>
@@ -461,8 +462,9 @@ $('opacity').oninput=e=>{alpha=+e.target.value/100;$('opacityLabel').textContent
 $('arrowSpacing').oninput=e=>{arrowSpacing=+e.target.value;$('arrowSpacingLabel').textContent=arrowSpacing+' px'+(arrowSpacing<=46?' · dense':'');draw();};
 $('arrows').onchange=e=>{arrows=e.target.checked;draw();};$('shading').onchange=e=>{shading=e.target.checked;draw();};
 $('mapStyle').onchange=e=>selectMapProvider(e.target.value);
+$('retryMap').onclick=()=>{if(baseTiles){baseTiles.redraw();queueTileHealth();}};
 $('refreshGrid').onclick=()=>{cache.clear();loadGrid(true);loadPoint();};
-$('topRefresh').onclick=()=>{cache.clear();loadGrid(true);loadPoint();};
+$('topRefresh').onclick=()=>{cache.clear();loadGrid(true);loadPoint();if(baseTiles){baseTiles.redraw();queueTileHealth();}};
 $('timeSlider').oninput=e=>{stopPlay();hour=+e.target.value;syncTimeline();};
 $('prev').onclick=()=>{stopPlay();step(-1);};$('next').onclick=()=>{stopPlay();step(1);};
 $('now').onclick=()=>{stopPlay();hour=nowIndex();syncTimeline();};
