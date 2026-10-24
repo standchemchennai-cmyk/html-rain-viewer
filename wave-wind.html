@@ -371,7 +371,7 @@ function syncTimeline(){
  $('timeSlider').value=String(hour);$('prev').disabled=hour===0;$('next').disabled=hour===timeline.length-1;
  const ticks=[0,.25,.5,.75,1].map(f=>timeline[Math.min(timeline.length-1,Math.round((timeline.length-1)*f))]);
  $('ruler').replaceChildren(...ticks.map(ms=>{const s=document.createElement('span');s.textContent=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',hour:'2-digit',hour12:true}).format(new Date(ms));return s;}));
- $('modelBadge').textContent=FIELDS[layer].label+' · '+(FIELDS[layer].type==='weather'?MODELS_WIND[windModel]:MODELS_WAVE[waveModel]);
+ $('modelBadge').textContent=(t()<Date.now()-3600000?'HISTORY · ':'FORECAST · ')+FIELDS[layer].label+' · '+(FIELDS[layer].type==='weather'?MODELS_WIND[windModel]:MODELS_WAVE[waveModel]);
  draw();updateMetrics();drawTide();drawRain();
 }
 function stopPlay(){playing=false;clearTimeout(playTimer);$('play').textContent='▶';}
@@ -496,7 +496,7 @@ function plotLegend(){
  const g='linear-gradient(90deg,'+spec.colors.join(',')+')';$('legendGradient').style.background=g;
  $('legendScale').replaceChildren(...[0,2,4,7].map(i=>{const span=document.createElement('span');span.textContent=spec.stops[i]+' '+spec.unit;return span;}));
  document.querySelectorAll('[data-layer]').forEach(b=>{const active=b.dataset.layer===layer;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
- $('modelBadge').textContent=spec.label+' · '+(spec.type==='wind'?MODELS_WIND[windModel]:MODELS_WAVE[waveModel]);
+ $('modelBadge').textContent=(t()<Date.now()-3600000?'HISTORY · ':'FORECAST · ')+spec.label+' · '+(spec.type==='weather'?MODELS_WIND[windModel]:MODELS_WAVE[waveModel]);
 }
 async function loadPoint(){
  const seq=++pointSeq,pt={...point},weather=windModel,wave=waveModel;
@@ -575,7 +575,6 @@ function drawRain(){
   if(num(amount)){group.total+=amount;group.valid++;}
  }
  const days=[...groups.values()],full=days.filter(d=>d.slots===24&&d.valid===24);
- const past=full.filter(d=>d.start<now).length,future=full.filter(d=>d.start>=now).length;
  $('rainCoverage').textContent=full.length+' complete days';
  const max=Math.max(1,...full.map(d=>d.total)),margin=11,barW=(w-2*margin)/days.length;
  c.strokeStyle='#36546b';c.beginPath();c.moveTo(margin,h-24);c.lineTo(w-margin,h-24);c.stroke();
