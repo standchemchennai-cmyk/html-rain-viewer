@@ -430,9 +430,9 @@ function resizeCanvas(){
 function draw(){
  const sz=resizeCanvas(),w=sz.w,h=sz.h;
  ctx.clearRect(0,0,w,h);
- if(!grid||grid.kind!==FIELDS[layer].type||grid.model!==(grid.kind==='wind'?windModel:waveModel))return;
+ if(!grid||grid.kind!==FIELDS[layer].type||grid.model!==(grid.kind==='weather'?windModel:waveModel))return;
  const spec=FIELDS[layer],ms=t(),coords=grid.points.map(p=>map.latLngToContainerPoint([p.lat,p.lon]));
- const value=grid.values.map(e=>sample(e,spec.field,ms)),direction=grid.values.map(e=>sample(e,spec.dir,ms));
+ const value=grid.values.map(e=>sample(e,spec.field,ms)),direction=grid.values.map(e=>spec.dir?sample(e,spec.dir,ms):null);
  if(!value.some(num)){setStatus('⚠ Selected model has no '+spec.label.toLowerCase()+' for '+IST.format(new Date(ms)),'warn');return;}
  const p00=coords[0],p10=coords[COLS-1],p01=coords[(ROWS-1)*COLS];
  const dx=(p10.x-p00.x)/(COLS-1),dy=(p01.y-p00.y)/(ROWS-1);
@@ -447,12 +447,12 @@ function draw(){
    // Do not invent a value if insufficient model cells exist.
    if(![a,b,cc,dd].every(num))continue;
    const n=a*(1-u)*(1-v)+b*u*(1-v)+cc*(1-u)*v+dd*u*v;
-   const rgb=colorAt(n,spec),i=(y*sw+x)*4;d[i]=rgb[0];d[i+1]=rgb[1];d[i+2]=rgb[2];d[i+3]=Math.round(alpha*225);
+   const rgb=colorAt(n,spec),i=(y*sw+x)*4;d[i]=rgb[0];d[i+1]=rgb[1];d[i+2]=rgb[2];d[i+3]=layer==='rain'?(n<.05?0:Math.round(alpha*225*Math.min(1,.35+n/2))):Math.round(alpha*225);
   }
   oc.putImageData(img,0,0);
   ctx.imageSmoothingEnabled=true;ctx.drawImage(off,0,0,w,h);
  }
- if(arrows){
+ if(arrows&&spec.dir){
   // Display resolution is higher than the underlying 7x5 forecast samples.
   // Bilinear interpolation of velocity vectors avoids artificial jumps
   // across the 360° direction boundary.
@@ -489,40 +489,112 @@ function drawArrow(x,y,ux,uy,len){
 }
 function plotLegend(){
  const spec=FIELDS[layer];$('legendTitle').textContent=spec.label+' · '+spec.unit;
+ $('arrows').disabled=!spec.dir;
+ $('legend').querySelector('small').textContent=spec.dir
+  ?'Arrows show travel direction, derived from interpolated model output.'
+  :'Rainfall is modelled hourly total precipitation (including showers), not observed radar.';
  const g='linear-gradient(90deg,'+spec.colors.join(',')+')';$('legendGradient').style.background=g;
  $('legendScale').replaceChildren(...[0,2,4,7].map(i=>{const span=document.createElement('span');span.textContent=spec.stops[i]+' '+spec.unit;return span;}));
  document.querySelectorAll('[data-layer]').forEach(b=>{const active=b.dataset.layer===layer;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
  $('modelBadge').textContent=spec.label+' · '+(spec.type==='wind'?MODELS_WIND[windModel]:MODELS_WAVE[waveModel]);
 }
 async function loadPoint(){
- const seq=++pointSeq,pt={...point},wModel=windModel,sModel=waveModel;
- pointData={wind:null,wave:null,tide:null};updateMetrics();drawTide();
- $('pointName').textContent=pt.name||'Selected ocean point';
+ const seq=++pointSeq,pt={...point},weather=windModel,wave=waveModel;
+ pointData={wind:null,wave:null,tide:null};updateMetrics();drawTide();drawRain();
+ $('pointName').textContent=pt.name||'Selected location';
  $('pointCoords').textContent=Math.abs(pt.lat).toFixed(3)+'° '+(pt.lat<0?'S':'N')+' · '+Math.abs(pt.lon).toFixed(3)+'° '+(pt.lon<0?'W':'E');
- const one=[{lat:pt.lat,lon:pt.lon}];
- const q=[
-  ['wind',reqUrl('wind',one,wModel,WIND_VARS)],
-  ['wave',reqUrl('wave',one,sModel,WAVE_VARS)],
-  ['tide',reqUrl('wave',one,'best_match','sea_level_height_msl')]
+ const pts=[{lat:pt.lat,lon:pt.lon}];
+ const requests=[
+  {key:'wind',kind:'weather',model:weather,vars:WEATHER_VARS},
+  {key:'wave',kind:'wave',model:wave,vars:WAVE_VARS},
+  {key:'tide',kind:'wave',model:'best_match',vars:'sea_level_height_msl'}
  ];
- await Promise.all(q.map(async item=>{
+ await Promise.all(requests.map(async item=>{
   try{
-   const raw=await jsonFetch(item[1]);if(seq!==pointSeq)return;
-   const data=normalise(raw,1)[0];if(!data)throw Error('No data');
-   pointData[item[0]]=data;setTimeline(data);updateMetrics();drawTide();
-  }catch(e){if(seq!==pointSeq)return;pointData[item[0]]={error:e.message||'No data'};updateMetrics();drawTide();}
+   const result=await fetchForecast(item.kind,pts,item.model,item.vars);
+   if(seq!==pointSeq)return;
+   const entry=normalise(result.data,1)[0];
+   if(!entry)throw Error('No hourly data returned');
+   pointData[item.key]=entry;updateMetrics();drawTide();drawRain();
+  }catch(e){
+   if(seq!==pointSeq)return;
+   pointData[item.key]={error:e.message||'Unavailable'};
+   updateMetrics();drawTide();drawRain();
+  }
  }));
+}
+function rainWindow(entry,from,hours){
+ if(!entry||entry.error)return null;
+ let total=0;
+ for(let k=0;k<hours;k++){
+  const v=sample(entry,'precipitation',from+k*3600000);
+  if(!num(v))return null;
+  total+=v;
+ }
+ return total;
 }
 function updateMetrics(){
  const ms=t(),w=pointData.wind&&!pointData.wind.error?pointData.wind:null,s=pointData.wave&&!pointData.wave.error?pointData.wave:null;
  const speed=sample(w,'wind_speed_10m',ms),from=sample(w,'wind_direction_10m',ms),gust=sample(w,'wind_gusts_10m',ms);
  const waves=sample(s,'wave_height',ms),wDir=sample(s,'wave_direction',ms),swell=sample(s,'swell_wave_height',ms),sDir=sample(s,'swell_wave_direction',ms),period=sample(s,'swell_wave_period',ms);
- $('mWind').textContent=num(speed)?fmt(speed,1)+' kn':'—';$('dWind').textContent=(num(from)?dirName(from)+' from':'No direction')+(num(gust)?' · gust '+fmt(gust,0)+' kn':'');
- $('mWaves').textContent=num(waves)?fmt(waves,1)+' m':'—';$('dWaves').textContent=num(wDir)?dirName(wDir)+' from':'No wave direction';
- $('mSwell').textContent=num(swell)?fmt(swell,1)+' m':'—';$('dSwell').textContent=num(sDir)?dirName(sDir)+' from':'No swell direction';
- $('mPeriod').textContent=num(period)?fmt(period,1)+' s':'—';$('dPeriod').textContent='Primary swell · '+MODELS_WAVE[waveModel];
- if(pointData.wind?.error)$('dWind').textContent='Unavailable: '+pointData.wind.error.slice(0,34);
+ const rain=sample(w,'precipitation',ms),next24=rainWindow(w,ms,24);
+ $('mWind').textContent=num(speed)?fmt(speed,1)+' kn':'—';
+ $('dWind').textContent=(num(from)?dirName(from)+' from':'No direction')+(num(gust)?' · gust '+fmt(gust,0)+' kn':'');
+ $('mWaves').textContent=num(waves)?fmt(waves,1)+' m':'—';
+ $('dWaves').textContent=num(wDir)?dirName(wDir)+' from':'No wave direction';
+ $('mSwell').textContent=num(swell)?fmt(swell,1)+' m':'—';
+ $('dSwell').textContent=num(sDir)?dirName(sDir)+' from':'No swell direction';
+ $('mPeriod').textContent=num(period)?fmt(period,1)+' s':'—';
+ $('dPeriod').textContent='Primary swell · '+MODELS_WAVE[waveModel];
+ $('mRain').textContent=num(rain)?fmt(rain,1)+' mm':'—';
+ $('dRain').textContent='Precipitation · '+MODELS_WIND[windModel];
+ $('mRain24').textContent=num(next24)?fmt(next24,1)+' mm':'—';
+ $('dRain24').textContent=num(next24)?'24 hourly values combined':'24h coverage unavailable';
+ if(pointData.wind?.error){
+  $('dWind').textContent='Unavailable: '+pointData.wind.error.slice(0,34);
+  $('dRain').textContent='Unavailable: '+pointData.wind.error.slice(0,34);
+ }
  if(pointData.wave?.error)$('dWaves').textContent='Unavailable: '+pointData.wave.error.slice(0,34);
+}
+function drawRain(){
+ const cv=$('rainChart'),dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth||280,h=cv.clientHeight||112;
+ cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
+ const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+ c.clearRect(0,0,w,h);c.font='10px system-ui';c.textBaseline='alphabetic';
+ const entry=pointData.wind;
+ if(!entry||entry.error||!entry.hourly){
+  $('rainCoverage').textContent=entry?.error?'Unavailable':'Loading…';
+  c.fillStyle='#b9cddd';c.fillText('No rainfall series',10,45);return;
+ }
+ const groups=new Map(),now=Date.now();
+ for(const ms of timeline){
+  const key=new Date(ms+19800000).toISOString().slice(0,10); // IST day, no DST
+  if(!groups.has(key))groups.set(key,{key,total:0,valid:0,slots:0,start:ms});
+  const group=groups.get(key);group.slots++;
+  const amount=sample(entry,'precipitation',ms);
+  if(num(amount)){group.total+=amount;group.valid++;}
+ }
+ const days=[...groups.values()],full=days.filter(d=>d.slots===24&&d.valid===24);
+ const past=full.filter(d=>d.start<now).length,future=full.filter(d=>d.start>=now).length;
+ $('rainCoverage').textContent=full.length+' complete days';
+ const max=Math.max(1,...full.map(d=>d.total)),margin=11,barW=(w-2*margin)/days.length;
+ c.strokeStyle='#36546b';c.beginPath();c.moveTo(margin,h-24);c.lineTo(w-margin,h-24);c.stroke();
+ const active=new Date(t()+19800000).toISOString().slice(0,10);
+ const today=new Date(Date.now()+19800000).toISOString().slice(0,10);
+ days.forEach((d,i)=>{
+  const x=margin+i*barW+1,complete=d.slots===24&&d.valid===24;
+  const hh=complete?Math.max(d.total>0?2:0,d.total/max*(h-44)):0;
+  if(complete){
+   c.fillStyle=d.key===active?'#ffd16d':d.key<today?'#78a2be':'#52cced';
+   c.fillRect(x,h-24-hh,Math.max(2,barW-2),hh);
+  }else{
+   c.fillStyle='rgba(150,167,181,.3)';c.fillRect(x,h-27,Math.max(2,barW-2),3);
+  }
+  if(d.key===today){c.strokeStyle='#ffa768';c.beginPath();c.moveTo(x,h-18);c.lineTo(x,6);c.stroke();}
+ });
+ c.fillStyle='#acc7da';c.font='9px system-ui';
+ c.fillText('−16d',margin,h-8);c.fillText('Today',Math.max(margin,w*.48),h-8);c.fillText('+16d',w-38,h-8);
+ c.fillStyle='#a9daee';c.fillText('Peak '+fmt(max,1)+' mm/day',w-95,12);
 }
 function tideExtrema(entry){
  const h=entry.hourly,v=h.sea_level_height_msl||[],out=[];
@@ -560,7 +632,7 @@ function setPoint(p,name){
  point={lat:p.lat,lon:p.lng??p.lon,name:name||'Selected location'};pointMarker.setLatLng([point.lat,point.lon]);loadPoint();
 }
 document.querySelectorAll('[data-layer]').forEach(b=>b.onclick=()=>{layer=b.dataset.layer;plotLegend();draw();scheduleGrid(20);$('sidebar').classList.remove('open');});
-$('windModel').onchange=e=>{windModel=e.target.value;if(FIELDS[layer].type==='wind')scheduleGrid(20);loadPoint();syncTimeline();};
+$('windModel').onchange=e=>{windModel=e.target.value;if(FIELDS[layer].type==='weather')scheduleGrid(20);loadPoint();syncTimeline();};
 $('waveModel').onchange=e=>{waveModel=e.target.value;if(FIELDS[layer].type==='wave')scheduleGrid(20);loadPoint();syncTimeline();};
 document.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>{const p=PLACES[b.dataset.place];map.setView([p.lat,p.lon],p.z);setPoint(p,p.name);$('sidebar').classList.remove('open');});
 $('opacity').oninput=e=>{alpha=+e.target.value/100;$('opacityLabel').textContent=e.target.value+'%';draw();};
@@ -578,7 +650,7 @@ $('mobilePanel').onclick=()=>{const open=$('sidebar').classList.toggle('open');$
 map.on('click',e=>setPoint(e.latlng));
 map.on('moveend zoomend resize',()=>{draw();scheduleGrid(750);queueTileHealth();});
 window.addEventListener('resize',()=>{map.invalidateSize();draw();drawTide();});
-plotLegend();draw();loadPoint();scheduleGrid(300);
+initTimeline();plotLegend();draw();loadPoint();scheduleGrid(300);
 })();
 </script>
 </body></html>
