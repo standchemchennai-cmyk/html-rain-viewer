@@ -59,10 +59,17 @@ The location inspector displays hourly rain, the following 24-hour total (only w
 
 For live measurements, use official gauges and radar rather than this map.
 
-## Map rendering (v5)
+## Map rendering (v7)
 
 The ocean viewer now defaults to the **Canvas-backed built-in coastlines**, generated from embedded land polygon data, rather than depending on external map tiles. Esri remains selectable for detailed roads/places: loaded Esri tiles display individually over the geographic fallback.
 
-Forecast sampling is increased from **7 × 5 (35)** to **11 × 7 (77) locations**, making the ocean forecast colour blocks smaller. When a nearshore cell has partial data, its missing corners no longer force the *entire* rectangle to disappear; available model values are weighted for display, and marine fields are masked off land polygons. Display colour pixel sampling is increased from 5 px to 3 px. These changes reduce visible rectangular offshore gaps; they **do not** add original nearshore model resolution or make marine forecasts reliable at a surf break. The `MAP V5` header confirms the updated viewer.
+Forecast sampling is increased from **7 × 5 (35)** to **11 × 7 (77) locations**, making the ocean forecast colour blocks smaller. When a nearshore cell has partial data, its missing corners no longer force the *entire* rectangle to disappear; available model values are weighted for display, and marine fields are masked off land polygons. Display colour pixel sampling is increased from 5 px to 3 px. These changes reduce visible rectangular offshore gaps; they **do not** add original nearshore model resolution or make marine forecasts reliable at a surf break. The `MAP V7` header confirms the updated viewer.
 
 Wind, significant wave, swell and period direction arrows default to **20 px spacing**, adjustable from **14–100 px** in the sidebar. This creates roughly 3.6 times as many arrow glyphs as the former 38 px default, but **not** additional forecast resolution: the arrows remain interpolated from the sampled model data.
+
+
+### Rainfall map detail (v7)
+
+Rainfall now uses a selectable **High** sampling grid of **17 × 11 = 187 Open-Meteo weather points** by default, compared with **11 × 7 = 77** for Standard. The shaded rainfall overlay is drawn at **2 CSS-pixel steps**, with bounded bicubic interpolation where 16 surrounding samples are present; coastal or missing-data areas use the existing partial-cell interpolation. RGB colour stops are cached to keep rendering fast. The rainfall grid fetches only precipitation, rather than all wind/gust variables. If the high-detail fetch fails (except during API rate-limit errors), the viewer attempts Standard detail and labels the fallback. Wind/wave map layers keep their previous 77-point sampling.
+
+This produces a smoother, denser *visualisation* and samples more locations but does **not** raise the forecast model’s native spatial resolution, guarantee local rainfall timing, or turn historical model output into radar observations. More coordinate requests consume more Open-Meteo usage allowance; Standard is intended for slower connections and limits.
