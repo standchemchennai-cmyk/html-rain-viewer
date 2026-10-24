@@ -32,10 +32,11 @@
       <button data-layer="waves" aria-pressed="false">🌊 Wave height</button>
       <button data-layer="swell" aria-pressed="false">↗ Primary swell</button>
       <button data-layer="period" aria-pressed="false">◷ Swell period</button>
+      <button data-layer="rain" aria-pressed="false">🌧 Rainfall</button>
     </div><p class="muted">Coloured forecast field with direction arrows. Ocean layers show modelled offshore conditions, not surf-break wave height.</p>
   </section>
   <section class="group"><h3>Forecast models</h3>
-    <label class="caption" for="windModel">Wind model</label><select id="windModel">
+    <label class="caption" for="windModel">Wind &amp; rain model</label><select id="windModel">
       <option value="best_match">Best match · automatic</option>
       <option value="ecmwf_ifs">ECMWF IFS</option>
       <option value="ncep_gfs_seamless">NOAA GFS</option>
@@ -53,7 +54,7 @@
       <option value="meteofrance_wave">Météo-France MFWAM</option>
       <option value="dwd_gwam">DWD GWAM · short range</option>
     </select>
-    <p class="muted">Wind and wave models are independent. Unavailable model hours remain blank, never replaced silently by another model.</p>
+    <p class="muted">Wind and rain use the weather model; waves use a separate marine model. Unsupported hours remain blank, never substituted.</p>
   </section>
   <section class="group"><h3>Map controls</h3>
     <label class="caption" for="mapStyle">Basemap</label>
@@ -77,7 +78,7 @@
   <section class="group"><h3>Reading this map</h3>
   <p class="muted">Click the map to inspect any location. The time slider controls map colours, arrows, selected-point forecasts and tide plot together. All times are India Standard Time (IST).</p>
   <p class="muted">The map is a <b>sparse sampled approximation</b> of forecast grids, not official native-resolution model tiles. Wind arrows point towards the direction of travel; numerical direction follows meteorological “from” convention.</p>
-  <p class="muted">Tides use independent Open-Meteo sea-level forecasts including tidal effects. Coastal accuracy is limited; do not use for navigation.</p>
+  <p class="muted">Rain is modelled <b>hourly total precipitation</b> including showers, not rain-gauge observations. Historical model output is not measured weather. Tides use independent modelled sea-level forecasts including tidal effects; do not use for navigation.</p>
   <p class="muted"><a target="_blank" rel="noopener" href="https://open-meteo.com/en/docs/marine-weather-api">Marine data & tide limitations ↗</a> · <a target="_blank" rel="noopener" href="https://open-meteo.com/en/docs">Weather models ↗</a></p>
   </section>
 </aside>
@@ -94,21 +95,27 @@
       <div class="metric"><label>Significant waves</label><strong id="mWaves">—</strong><small id="dWaves">Wave model</small></div>
       <div class="metric"><label>Primary swell</label><strong id="mSwell">—</strong><small id="dSwell">Wave model</small></div>
       <div class="metric"><label>Swell period</label><strong id="mPeriod">—</strong><small id="dPeriod">Wave model</small></div>
+      <div class="metric"><label>Rain · selected hour</label><strong id="mRain">—</strong><small id="dRain">Hourly model total</small></div>
+      <div class="metric"><label>Rain · next 24h</label><strong id="mRain24">—</strong><small id="dRain24">From selected hour</small></div>
     </div>
     <div class="tidal"><div class="tidal-title"><strong>〰 Tide / sea level</strong><span id="tideNow">Loading…</span></div>
       <canvas id="tideChart" width="280" height="115" aria-label="Hourly modelled tide height chart"></canvas>
       <div id="tideEvents" class="tide-events">Loading sea-level forecasts…</div>
       <div class="tide-warning">Modelled sea-level height relative to mean sea level; <b>not</b> local chart datum. High/low times are approximate model extrema, not authoritative tide-table predictions.</div>
     </div>
+    <div class="tidal"><div class="tidal-title"><strong>🌧 Daily rainfall · past / forecast</strong><span id="rainCoverage">Loading…</span></div>
+      <canvas id="rainChart" width="280" height="112" aria-label="Modelled daily precipitation for the past and future 16 days"></canvas>
+      <div class="tide-warning">Accumulated from hourly model precipitation by IST day. Partial days or missing hours are marked as incomplete; this is not a gauge record.</div>
+    </div>
   </section>
   <section class="legend" id="legend"><h4 id="legendTitle">Wind · knots</h4><div id="legendGradient" class="gradient"></div><div id="legendScale" class="legendscale"></div><small>Arrows indicate travel direction. Hover/click the map for precise values.</small></section>
   <button id="mobilePanel" class="mobile-panel" aria-expanded="false">☷ Layers & models</button>
   <section class="timeline">
-    <div class="timerow"><div><div class="eyebrow">Hourly forecast · IST</div><div id="timeLabel" class="time-label">Loading timeline…</div><div id="timeSub" class="time-sub">Loading model timestamps…</div></div>
+    <div class="timerow"><div><div class="eyebrow">16 days model history · up to 16 days forecast · IST</div><div id="timeLabel" class="time-label">Loading timeline…</div><div id="timeSub" class="time-sub">Loading model timestamps…</div></div>
       <div class="playtools"><button id="prev" title="Previous hour" aria-label="Previous hour">‹</button><button id="play" class="primary" title="Play timeline" aria-label="Play timeline">▶</button><button id="next" title="Next hour" aria-label="Next hour">›</button><button id="now" title="Jump to current forecast hour">↥</button></div></div>
     <input id="timeSlider" type="range" min="0" max="0" value="0" step="1" aria-label="Forecast date and time" disabled>
     <div id="ruler" class="ruler"><span>Loading</span><span>forecast</span><span>timeline</span></div>
-    <div class="footer"><span id="modelBadge">Forecast · not observations</span><span>Open-Meteo · IST · non-commercial API</span></div>
+    <div class="footer"><span id="modelBadge">Past: model history · Future: forecast · not observations</span><span>Open-Meteo · IST · non-commercial API</span></div>
   </section>
 </main></div></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -122,12 +129,13 @@ const PLACES={kovalam:{lat:12.78,lon:80.29,z:9,name:'Kovalam · offshore'},pondy
 const MODELS_WIND={best_match:'Best match',ecmwf_ifs:'ECMWF IFS',ncep_gfs_seamless:'NOAA GFS',icon_global:'DWD ICON',ukmo_global_deterministic_10km:'UKMO',jma_gsm:'JMA GSM',meteofrance_arpege_world:'ARPEGE'};
 const MODELS_WAVE={best_match:'Best match',ecmwf_wam:'ECMWF WAM',ecmwf_wam025:'ECMWF WAM 0.25',ncep_gfswave016:'GFS Wave 0.16',ncep_gfswave025:'GFS Wave 0.25',meteofrance_wave:'MFWAM',dwd_gwam:'DWD GWAM'};
 const FIELDS={
- wind:{type:'wind',field:'wind_speed_10m',dir:'wind_direction_10m',label:'Wind speed',unit:'kn',stops:[0,5,10,15,20,30,40,55],colors:['#1c5480','#25b5be','#6de6aa','#dfef73','#ffbc4d','#ed7243','#c53e86','#87238c']},
+ wind:{type:'weather',field:'wind_speed_10m',dir:'wind_direction_10m',label:'Wind speed',unit:'kn',stops:[0,5,10,15,20,30,40,55],colors:['#1c5480','#25b5be','#6de6aa','#dfef73','#ffbc4d','#ed7243','#c53e86','#87238c']},
  waves:{type:'wave',field:'wave_height',dir:'wave_direction',label:'Significant wave height',unit:'m',stops:[0,.5,1,1.5,2,3,4.5,7],colors:['#245a8e','#25c3be','#79e8bf','#dff2a1','#fed56e','#f59745','#db4a78','#802caa']},
  swell:{type:'wave',field:'swell_wave_height',dir:'swell_wave_direction',label:'Primary swell height',unit:'m',stops:[0,.4,.8,1.2,1.8,2.5,3.5,5],colors:['#275790','#2ab8d5','#67e2bd','#c4eb90','#f8d45b','#ee9c42','#d24b7e','#802caa']},
- period:{type:'wave',field:'swell_wave_period',dir:'swell_wave_direction',label:'Swell period',unit:'s',stops:[0,4,6,8,10,12,15,20],colors:['#29558a','#38b7d1','#61dbc7','#b0eb9a','#f1d579','#f5a24d','#d9577b','#9a4ca8']}
+ period:{type:'wave',field:'swell_wave_period',dir:'swell_wave_direction',label:'Swell period',unit:'s',stops:[0,4,6,8,10,12,15,20],colors:['#29558a','#38b7d1','#61dbc7','#b0eb9a','#f1d579','#f5a24d','#d9577b','#9a4ca8']},
+ rain:{type:'weather',field:'precipitation',dir:null,label:'Hourly precipitation',unit:'mm/h',stops:[0,.2,1,2,5,10,20,40],colors:['#214759','#40a5d8','#3ad4df','#60d3a6','#d9ee70','#ffc44d','#f56561','#b444bd']}
 };
-const WIND_VARS='wind_speed_10m,wind_direction_10m,wind_gusts_10m';
+const WEATHER_VARS='wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation';
 const WAVE_VARS='wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period';
 const CACHE_TTL=15*60000, COLS=7, ROWS=5;
 let layer='wind',windModel='best_match',waveModel='best_match',alpha=.48,arrows=true,shading=true,arrowSpacing=38;
