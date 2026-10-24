@@ -11,21 +11,45 @@
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:13px/1.5 system-ui,-apple-system,Segoe UI,Arial,sans-serif}button,input,select{font:inherit}button,select{color:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #8ee1ff;outline-offset:2px}button:disabled{opacity:.45;cursor:not-allowed}a{color:#92dfff}
 #app{height:100dvh;min-height:500px;display:flex;flex-direction:column;overflow:hidden}
 .top{height:59px;flex:none;display:flex;align-items:center;gap:13px;padding:0 17px;background:#0a1a2b;border-bottom:1px solid var(--line);z-index:1001}.brandicon{width:37px;height:37px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(135deg,#005e81,#155779);font-size:22px}.brand{min-width:0;flex:1}.brand strong{font-size:17px;letter-spacing:-.45px;display:block}.brand small{font-size:10px;letter-spacing:.55px;color:var(--sub);display:block}.top-actions{display:flex;align-items:center;gap:8px}.top-actions a,.top-actions button{white-space:nowrap;text-decoration:none;padding:8px 11px;border-radius:9px;background:#13324b;border:1px solid #345974;color:#d5f2ff}
-.shell{display:flex;flex:1;min-height:0}.side{width:273px;flex:none;background:var(--panel);border-right:1px solid var(--line);padding:17px 15px 175px;overflow-y:auto;z-index:700}.side h3{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#a5d9ef;margin:0 0 12px}.group{padding-bottom:19px;margin-bottom:19px;border-bottom:1px solid #2a4356}.side label.caption{display:block;color:#c1d9ea;font-size:11px;margin:10px 0 5px}.side select{width:100%;padding:10px;background:#17334b;border:1px solid #3e607b;border-radius:9px;min-height:37px}.layer-picks{display:grid;grid-template-columns:1fr 1fr;gap:7px}.layer-picks button,.presets button{border:1px solid #355e79;background:#153149;color:#c9e6f5;padding:10px 7px;border-radius:9px;font-size:11px}.layer-picks button.active{background:#075b84;border-color:#6ccfff;color:white}.presets{display:grid;grid-template-columns:1fr 1fr;gap:7px}.muted{font-size:11px;line-height:1.65;color:var(--sub)}.controls-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0 6px;color:#c2d5e6;font-size:11px}.controls-row input{accent-color:#5cd8ed}.side input[type=range]{width:100%;accent-color:var(--blue)}.refresh-button{padding:10px 11px;border:1px solid #5293ab;background:#125377;border-radius:9px;width:100%;margin-top:10px}
+.shell{display:flex;flex:1;min-height:0;position:relative}.side{width:273px;flex:none;background:var(--panel);border-right:1px solid var(--line);padding:17px 15px 175px;overflow-y:auto;z-index:700}.side h3{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#a5d9ef;margin:0 0 12px}.group{padding-bottom:19px;margin-bottom:19px;border-bottom:1px solid #2a4356}.side label.caption{display:block;color:#c1d9ea;font-size:11px;margin:10px 0 5px}.side select{width:100%;padding:10px;background:#17334b;border:1px solid #3e607b;border-radius:9px;min-height:37px}.layer-picks{display:grid;grid-template-columns:1fr 1fr;gap:7px}.layer-picks button,.presets button{border:1px solid #355e79;background:#153149;color:#c9e6f5;padding:10px 7px;border-radius:9px;font-size:11px}.layer-picks button.active{background:#075b84;border-color:#6ccfff;color:white}.presets{display:grid;grid-template-columns:1fr 1fr;gap:7px}.muted{font-size:11px;line-height:1.65;color:var(--sub)}.controls-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0 6px;color:#c2d5e6;font-size:11px}.controls-row input{accent-color:#5cd8ed}.side input[type=range]{width:100%;accent-color:var(--blue)}.refresh-button{padding:10px 11px;border:1px solid #5293ab;background:#125377;border-radius:9px;width:100%;margin-top:10px}
 .main{flex:1;min-width:0;position:relative;background:#122c3e}.map{position:absolute;inset:0;z-index:2}.leaflet-container{background:transparent;font-family:inherit}.leaflet-control-attribution{background:#061b2bdc!important;color:#bdd7e4!important;font-size:9px!important}.leaflet-control-attribution a{color:#a9e4ff!important}.leaflet-bar a{background:#102e45;color:#fff;border-color:#375772}.leaflet-bar a:hover{background:#1d4e69;color:#fff}.vector-base,.vector-coast{position:absolute;inset:0;pointer-events:none}.vector-base{z-index:1}.field-canvas{position:absolute;inset:0;pointer-events:none;z-index:450}.vector-coast{z-index:455}.vector-label{color:#f2fcff;font-weight:700;text-shadow:0 1px 4px #112c3e}.map-top{position:absolute;top:12px;left:12px;right:322px;display:flex;gap:7px;align-items:start;z-index:650;pointer-events:none}.map-top>*{pointer-events:auto}.map-top{flex-wrap:wrap}.map-top .pill{max-width:100%;overflow-wrap:anywhere}.pill{background:#091f33ed;border:1px solid #42667e;color:#d9f2ff;padding:8px 10px;border-radius:10px;box-shadow:0 4px 18px #0005;font-size:11px}.pill.warn{color:#ffd797}.pill.bad{color:#ffb3a4}.legend{position:absolute;z-index:600;left:13px;bottom:173px;background:#091e2fed;border:1px solid #3c647c;border-radius:12px;padding:10px 12px;width:225px}.legend h4{font-size:11px;margin:0 0 7px}.gradient{height:11px;border-radius:5px;margin:6px 0 4px}.legendscale{font-size:10px;display:flex;justify-content:space-between;color:#bbd5e5}.legend small{display:block;color:#adcadb;font-size:10px;margin-top:7px}.inspector{position:absolute;z-index:650;right:12px;top:12px;width:299px;max-height:calc(100% - 187px);overflow-y:auto;background:#091b2cf5;border:1px solid #395a74;box-shadow:0 15px 42px #0007;border-radius:14px;padding:14px}.inspector h3{margin:0;font-size:15px}.inspector .coords{font-size:10px;color:#a0c1d3}.inspector .hint{font-size:10px;color:#95b6cb;margin-top:5px}.metricgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}.metric{background:#142e44;border:1px solid #315269;border-radius:9px;padding:9px}.metric label{font-size:10px;color:#afc8db;display:block}.metric strong{display:block;font-size:17px;line-height:1.35;margin-top:4px}.metric small{display:block;color:#90b2c7;font-size:10px;min-height:13px}.tidal{border-top:1px solid #2a4c61;padding-top:10px}.tidal-title{display:flex;align-items:center;justify-content:space-between;gap:8px}.tidal-title strong{font-size:12px}.tidal-title span{font-size:10px;color:#95d8ed}#tideChart{width:100%;height:115px;display:block;margin:6px 0;background:#0a2235;border-radius:8px}.tide-events{display:grid;gap:4px;font-size:11px;color:#c4dbea}.tide-events b{color:#fff}.tide-warning{font-size:10px;color:#adbbca;line-height:1.4;margin-top:9px}.timeline{position:absolute;z-index:800;left:12px;right:12px;bottom:12px;padding:12px 15px;background:#081d2ff5;border:1px solid #3b617c;border-radius:14px;box-shadow:0 12px 30px #0009}.timerow{display:flex;justify-content:space-between;align-items:center;gap:12px}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#7fd6f5;font-weight:750}.time-label{font-size:18px;font-weight:800;letter-spacing:-.35px;margin-top:2px}.time-sub{font-size:10px;color:#a3c0d2}.playtools{display:flex;gap:6px}.playtools button{border:1px solid #44738c;border-radius:9px;background:#153b55;width:37px;height:37px;font-size:18px}.playtools button.primary{background:#00769e}.timeline input[type=range]{accent-color:#59cfee;width:100%;margin:12px 0 4px}.ruler{display:flex;justify-content:space-between;color:#a0b9cd;font-size:10px}.footer{display:flex;justify-content:space-between;gap:6px;border-top:1px solid #28465a;padding-top:7px;margin-top:8px;font-size:10px;color:#9dc1d5}.mobile-panel{display:none}.tiny{font-size:10px}.loading-spin{display:inline-block;animation:spin 2s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:1020px){.side{width:235px}.inspector{width:260px}.map-top{right:276px}}
 @media(max-width:760px){.top{height:55px;padding:0 9px;gap:7px}.brandicon{width:34px;height:34px}.brand strong{font-size:14px}.brand small{font-size:8px}.top-actions a{padding:7px;font-size:11px}.top-actions button{display:none}.side{position:absolute;left:0;top:55px;bottom:0;z-index:1000;width:min(305px,91vw);transform:translateX(-110%);transition:transform .2s;box-shadow:12px 0 30px #0007}.side.open{transform:translateX(0)}.mobile-panel{display:block;position:absolute;bottom:172px;left:12px;z-index:850;border:1px solid #6c9cba;background:#114262;border-radius:10px;padding:8px 10px}.inspector{top:56px;right:7px;width:218px;max-height:calc(100% - 244px);padding:10px}.metricgrid{gap:5px;margin:7px 0}.metric{padding:6px}.metric strong{font-size:14px}.inspector h3{font-size:12px}.tide-warning{font-size:9px}.map-top{right:8px;left:8px;top:9px}.pill{font-size:10px;padding:6px 8px}.legend{left:8px;bottom:160px;width:160px;padding:7px}.timeline{left:6px;right:6px;bottom:6px;padding:10px}.time-label{font-size:15px}.playtools button{width:32px;height:32px}.ruler,.footer{font-size:9px}}
 @media(max-width:470px){.inspector{top:51px;width:189px;max-height:calc(100% - 236px)}.metric small{display:none}.tidal-title{display:block}.inspector .hint{display:none}.legend{width:145px}.top-actions a{font-size:10px}.brand small{display:none}}
+
+/* Responsive panel controls: the map is the default view on phones. */
+.side-close,.inspector-close,.mobile-forecast,.sidebar-backdrop{display:none}
+@media(max-width:760px){
+ .side{top:0;bottom:0;z-index:1000;padding-top:12px;padding-bottom:28px;overscroll-behavior:contain}
+ .side-header{position:sticky;top:-12px;z-index:3;display:flex;justify-content:space-between;align-items:center;gap:10px;margin:-12px -15px 16px;padding:13px 15px;background:var(--panel);border-bottom:1px solid var(--line)}
+ .side-header strong{font-size:13px;color:#c6e9fb}
+ .side-close,.inspector-close{display:inline-flex;align-items:center;justify-content:center;min-height:39px;border:1px solid #638da5;border-radius:9px;background:#17435e;color:#fff;padding:8px 12px;font-size:12px}
+ .sidebar-backdrop.open{display:block;position:absolute;inset:0;border:0;margin:0;padding:0;background:rgba(0,9,19,.55);z-index:950}
+ .mobile-panel{bottom:175px;left:9px;z-index:850;min-height:39px}
+ .mobile-forecast{display:block;position:absolute;bottom:175px;right:9px;z-index:850;border:1px solid #6c9cba;border-radius:10px;min-height:39px;padding:8px 11px;background:#114262;color:#fff}
+ .mobile-panel[aria-expanded="true"],.mobile-forecast[aria-expanded="true"]{background:#0b739c;border-color:#94e7ff}
+ .inspector{display:none;top:52px;right:8px;width:min(365px,calc(100% - 16px));max-height:calc(100% - 245px);z-index:760;padding:10px;overscroll-behavior:contain}
+ .inspector.open{display:block}
+ .inspector-close{position:sticky;top:0;z-index:2;width:100%;margin-bottom:9px;background:#17435e}
+ .inspector h3{font-size:14px}
+ .metric strong{font-size:16px}
+}
+@media(max-width:470px){
+ .inspector{top:52px;right:8px;width:min(350px,calc(100% - 16px));max-height:calc(100% - 245px)}
+ .side-header{margin-left:-15px;margin-right:-15px}
+}
 </style>
 </head>
 <body>
 <div id="app">
 <header class="top">
-  <span class="brandicon">🌊</span><div class="brand"><strong>Wavebaba <span style="color:#79deff">Ocean Viewer</span></strong><small>LIVE MODEL FORECASTS · WIND · WAVES · TIDES · MAP V5</small></div>
+  <span class="brandicon">🌊</span><div class="brand"><strong>Wavebaba <span style="color:#79deff">Ocean Viewer</span></strong><small>LIVE MODEL FORECASTS · WIND · WAVES · TIDES · MAP V6</small></div>
   <div class="top-actions"><a href="./index.html" title="Open original satellite/rain viewer">☁ Rain viewer</a><button id="topRefresh">↻ Refresh</button></div>
 </header>
 <div class="shell">
+<button type="button" id="sidebarBackdrop" class="sidebar-backdrop" aria-label="Close layers and models menu" tabindex="-1"></button>
 <aside id="sidebar" class="side" aria-label="Forecast controls">
+  <div class="side-header"><strong>Layers &amp; models</strong><button id="sideClose" type="button" class="side-close" aria-label="Close layers and models">✕ Close</button></div>
   <section class="group"><h3>Weather layers</h3>
     <div class="layer-picks" id="layers">
       <button class="active" data-layer="wind" aria-pressed="true">➤ Wind speed</button>
@@ -87,8 +111,9 @@
   <canvas id="vectorBase" class="vector-base" aria-hidden="true"></canvas>
   <canvas id="fieldCanvas" class="field-canvas" aria-hidden="true"></canvas>
   <canvas id="vectorCoast" class="vector-coast" aria-hidden="true"></canvas>
-  <div class="map-top"><div id="status" class="pill">Connecting to forecast sources…</div><div id="mapHealth" class="pill">Map engine v5 · starting…</div></div>
-  <section class="inspector" aria-label="Selected location forecast">
+  <div class="map-top"><div id="status" class="pill">Connecting to forecast sources…</div><div id="mapHealth" class="pill">Map engine v6 · starting…</div></div>
+  <section id="inspector" class="inspector" aria-label="Selected location forecast">
+    <button id="inspectorClose" class="inspector-close" type="button" aria-label="Close forecast panel">✕ Close forecast — show map</button>
     <h3 id="pointName">Kovalam · offshore</h3><div id="pointCoords" class="coords">12.78° N · 80.29° E</div><div class="hint">Click anywhere to inspect the forecast</div>
     <div class="metricgrid">
       <div class="metric"><label>Wind</label><strong id="mWind">—</strong><small id="dWind">Wind model</small></div>
@@ -110,7 +135,8 @@
     </div>
   </section>
   <section class="legend" id="legend"><h4 id="legendTitle">Wind · knots</h4><div id="legendGradient" class="gradient"></div><div id="legendScale" class="legendscale"></div><small>Arrows indicate travel direction. Hover/click the map for precise values.</small></section>
-  <button id="mobilePanel" class="mobile-panel" aria-expanded="false">☷ Layers & models</button>
+  <button id="mobilePanel" class="mobile-panel" type="button" aria-controls="sidebar" aria-expanded="false">☷ Layers &amp; models</button>
+  <button id="mobileForecast" class="mobile-forecast" type="button" aria-controls="inspector" aria-expanded="false">⌁ Forecast</button>
   <section class="timeline">
     <div class="timerow"><div><div class="eyebrow">16 days model history · up to 16 days forecast · IST</div><div id="timeLabel" class="time-label">Loading timeline…</div><div id="timeSub" class="time-sub">Loading model timestamps…</div></div>
       <div class="playtools"><button id="prev" title="Previous hour" aria-label="Previous hour">‹</button><button id="play" class="primary" title="Play timeline" aria-label="Play timeline">▶</button><button id="next" title="Next hour" aria-label="Next hour">›</button><button id="now" title="Jump to current forecast hour">↥</button></div></div>
@@ -661,14 +687,38 @@ function drawTide(){
 function setPoint(p,name){
  point={lat:p.lat,lon:p.lng??p.lon,name:name||'Selected location'};pointMarker.setLatLng([point.lat,point.lon]);loadPoint();
 }
-document.querySelectorAll('[data-layer]').forEach(b=>b.onclick=()=>{layer=b.dataset.layer;plotLegend();draw();scheduleGrid(20);$('sidebar').classList.remove('open');});
-$('windModel').onchange=e=>{windModel=e.target.value;if(FIELDS[layer].type==='weather')scheduleGrid(20);loadPoint();syncTimeline();};
-$('waveModel').onchange=e=>{waveModel=e.target.value;if(FIELDS[layer].type==='wave')scheduleGrid(20);loadPoint();syncTimeline();};
-document.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>{const p=PLACES[b.dataset.place];map.setView([p.lat,p.lon],p.z);setPoint(p,p.name);$('sidebar').classList.remove('open');});
+function isMobile(){return window.matchMedia('(max-width:760px)').matches;}
+function closeSidebar(){
+ $('sidebar').classList.remove('open');
+ $('sidebarBackdrop').classList.remove('open');
+ $('mobilePanel').setAttribute('aria-expanded','false');
+ $('mobilePanel').textContent='☷ Layers & models';
+}
+function setSidebar(open){
+ if(!isMobile())return;
+ if(open)setInspector(false);
+ $('sidebar').classList.toggle('open',open);
+ $('sidebarBackdrop').classList.toggle('open',open);
+ $('mobilePanel').setAttribute('aria-expanded',String(open));
+ $('mobilePanel').textContent=open?'✕ Close layers':'☷ Layers & models';
+ if(open)$('sideClose').focus({preventScroll:true});
+}
+function setInspector(open){
+ const active=Boolean(open)&&isMobile();
+ $('inspector').classList.toggle('open',active);
+ $('mobileForecast').setAttribute('aria-expanded',String(active));
+ $('mobileForecast').textContent=active?'✕ Hide forecast':'⌁ Forecast';
+ $('inspector').setAttribute('aria-hidden',String(isMobile()&&!active));
+ if(active){closeSidebar();$('inspectorClose').focus({preventScroll:true});}
+}
+document.querySelectorAll('[data-layer]').forEach(b=>b.onclick=()=>{layer=b.dataset.layer;plotLegend();draw();scheduleGrid(20);closeSidebar();});
+$('windModel').onchange=e=>{windModel=e.target.value;if(FIELDS[layer].type==='weather')scheduleGrid(20);loadPoint();syncTimeline();closeSidebar();};
+$('waveModel').onchange=e=>{waveModel=e.target.value;if(FIELDS[layer].type==='wave')scheduleGrid(20);loadPoint();syncTimeline();closeSidebar();};
+document.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>{const p=PLACES[b.dataset.place];map.setView([p.lat,p.lon],p.z);setPoint(p,p.name);closeSidebar();});
 $('opacity').oninput=e=>{alpha=+e.target.value/100;$('opacityLabel').textContent=e.target.value+'%';draw();};
 $('arrowSpacing').oninput=e=>{arrowSpacing=+e.target.value;$('arrowSpacingLabel').textContent=arrowSpacing+' px'+(arrowSpacing<=24?' · very dense':arrowSpacing<=46?' · dense':'');draw();};
 $('arrows').onchange=e=>{arrows=e.target.checked;draw();};$('shading').onchange=e=>{shading=e.target.checked;draw();};
-$('mapStyle').onchange=e=>selectMapProvider(e.target.value);
+$('mapStyle').onchange=e=>{selectMapProvider(e.target.value);closeSidebar();};
 $('retryMap').onclick=()=>{showRaster(false);if(baseTiles)baseTiles.redraw();else drawVector();queueTileHealth();};
 $('refreshGrid').onclick=()=>{cache.clear();loadGrid(true);loadPoint();};
 $('topRefresh').onclick=()=>{cache.clear();loadGrid(true);loadPoint();if(baseTiles){baseTiles.redraw();queueTileHealth();}};
@@ -676,10 +726,22 @@ $('timeSlider').oninput=e=>{stopPlay();hour=+e.target.value;syncTimeline();};
 $('prev').onclick=()=>{stopPlay();step(-1);};$('next').onclick=()=>{stopPlay();step(1);};
 $('now').onclick=()=>{stopPlay();hour=nowIndex();syncTimeline();};
 $('play').onclick=()=>{if(playing){stopPlay();return;}if(!timeline.length)return;if(hour===timeline.length-1)hour=nowIndex();playing=true;$('play').textContent='Ⅱ';syncTimeline();playNext();};
-$('mobilePanel').onclick=()=>{const open=$('sidebar').classList.toggle('open');$('mobilePanel').setAttribute('aria-expanded',String(open));};
-map.on('click',e=>setPoint(e.latlng));
+$('mobilePanel').onclick=()=>setSidebar(!$('sidebar').classList.contains('open'));
+$('sideClose').onclick=closeSidebar;
+$('sidebarBackdrop').onclick=closeSidebar;
+$('mobileForecast').onclick=()=>setInspector(!$('inspector').classList.contains('open'));
+$('inspectorClose').onclick=()=>setInspector(false);
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'){closeSidebar();setInspector(false);}
+});
+map.on('click',e=>{setPoint(e.latlng);if(isMobile())setInspector(true);});
 map.on('moveend zoomend resize',()=>{draw();scheduleGrid(750);queueTileHealth();});
-window.addEventListener('resize',()=>{map.invalidateSize();draw();drawTide();});
+window.addEventListener('resize',()=>{
+ if(!isMobile()){closeSidebar();setInspector(false);}
+ else $('inspector').setAttribute('aria-hidden',String(!$('inspector').classList.contains('open')));
+ map.invalidateSize();draw();drawTide();
+});
+$('inspector').setAttribute('aria-hidden',String(isMobile()));
 initTimeline();plotLegend();draw();loadPoint();scheduleGrid(300);
 })();
 </script>
