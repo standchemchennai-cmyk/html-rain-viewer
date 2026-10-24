@@ -49,6 +49,16 @@ The viewer connects to the community live stream at `wss://live2.lightningmaps.o
 
 Historical hourly and daily lightning observations are viewable through the [ISRO/NRSC Bhuvan Lightning portal](https://bhuvan-app1.nrsc.gov.in/lightning/), including its Hourly Lightning Data and Hourly Lightning ECV players. Bhuvan currently offers recent-date selection, and the raw-data download workflow may require authorized registration. There is **no verified public time-range JSON endpoint integrated in this repository**, so the viewer's satellite time slider does **not** display historic lightning for selected frames. Use the link in the map and sidebar to inspect genuine historical observations separately. The lightning strike stream is not an archive, and a zero strike count must not be interpreted as no storm activity.
 
+## Rain and 16-day historical/forecast controls
+
+The [ocean viewer](./wave-wind.html) includes a selectable **Rainfall** overlay showing modelled hourly total precipitation, including showers, on the same georeferenced sampled grid as wind. Wind and rain share the atmospheric weather model selector; waves, swell and sea level use marine modelling separately.
+
+A single hourly slider spans **16 historical calendar days + 16 forecast calendar days** (768 hourly positions). The atmospheric API requests `past_days=16&forecast_days=16`. The marine API requests the same maximum first; when its service or selected model limits forecast horizon, it retries with 8 or 7 days. Some specific weather models likewise support fewer than 16 days. No layer invents missing forecast data outside the provider's published horizon.
+
+The location inspector displays hourly rain, the following 24-hour total (only when all 24 values exist), and a daily model precipitation chart. Historical data comes from **recent archived model output**, not ground observations, radar measurements or original 16-day-old forecast runs. Partial-day precipitation totals are marked incomplete.
+
+For live measurements, use official gauges and radar rather than this map.
+
 ## Map rendering (v3)
 
 The ocean viewer uses a **Canvas-backed fallback** generated from geographic land polygon data embedded inside the HTML. It is layered outside Leaflet to avoid map-pane stacking issues. Esri remains selected by default, but incomplete Esri tiles are hidden rather than shown as a patchwork. The independent coastline canvas paints a continuous land/ocean map even if image servers are unavailable. For detailed roads and place names, the Esri tiles still need to load successfully. A small `MAP V3` marker in the header confirms that the latest viewer is open.
