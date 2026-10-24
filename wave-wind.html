@@ -296,17 +296,42 @@ function num(v){return typeof v==='number'&&Number.isFinite(v);}
 function fmt(v,dec){return num(v)?v.toFixed(dec):'—';}
 function dirName(d){if(!num(d))return '—';return ['N','NE','E','SE','S','SW','W','NW'][Math.round(((d%360)+360)%360/45)%8];}
 function parseTime(t){if(typeof t!=='string')return NaN;return Date.parse(t.endsWith('Z')?t:t+'Z');}
-function reqUrl(type,pts,model,vars){
+function reqUrl(type,pts,model,vars,days){
  const params=new URLSearchParams();
  params.set('latitude',pts.map(p=>p.lat.toFixed(4)).join(','));
  params.set('longitude',pts.map(p=>p.lon.toFixed(4)).join(','));
- params.set('hourly',vars);params.set('timezone','UTC');params.set('past_days','1');params.set('forecast_days','7');params.set('models',model);params.set('cell_selection',type==='wave'?'sea':'nearest');
- if(type==='wind')params.set('wind_speed_unit','kn');
- return (type==='wind'?'https://api.open-meteo.com/v1/forecast':'https://marine-api.open-meteo.com/v1/marine')+'?'+params.toString();
+ params.set('hourly',vars);
+ params.set('timezone','UTC');
+ params.set('past_days','16');
+ params.set('forecast_days',String(days));
+ params.set('models',model);
+ if(type==='wave')params.set('cell_selection','sea');
+ else {params.set('cell_selection','nearest');params.set('wind_speed_unit','kn');}
+ return (type==='weather'?'https://api.open-meteo.com/v1/forecast':'https://marine-api.open-meteo.com/v1/marine')+'?'+params.toString();
 }
 async function jsonFetch(url){
- const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),18000);
- try{const res=await fetch(url,{signal:abort.signal,cache:'no-store'});const data=await res.json();if(!res.ok||data.error)throw Error(data.reason||'HTTP '+res.status);return data;}finally{clearTimeout(timeout);}
+ const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),24000);
+ try{
+  const res=await fetch(url,{signal:abort.signal,cache:'no-store'});
+  const raw=await res.text();
+  let data;try{data=JSON.parse(raw);}catch(_){throw Error('Non-JSON API response (HTTP '+res.status+')');}
+  if(!res.ok||data.error)throw Error(data.reason||'HTTP '+res.status);
+  return data;
+ }finally{clearTimeout(timeout);}
+}
+async function fetchForecast(type,pts,model,vars){
+ // Request the full 16-day period. Certain models/providers publish less.
+ // Retry with their supported lengths ONLY for a documented horizon rejection.
+ const lengths=type==='wave'?[16,8,7]:[16,15,10,8,7];
+ let error;
+ for(const days of lengths){
+  try{return {data:await jsonFetch(reqUrl(type,pts,model,vars,days)),days};}
+  catch(e){
+   error=e;
+   if(!/forecast.?days|forecast.?length|out.of.range|must be between|maximum|maximum.*days|no data available for/i.test(e.message||''))throw e;
+  }
+ }
+ throw error||Error('Forecast unavailable');
 }
 function normalise(raw,count){
  const list=Array.isArray(raw)?raw:[raw];
@@ -324,28 +349,30 @@ function sample(entry,key,ms){
  const v=entry.hourly[key]?.[idx];
  return num(v)?v:null;
 }
-function setTimeline(entry){
- if(timeline.length||!entry)return;
- const all=entry.hourly.time.map(parseTime).filter(Number.isFinite);
- if(!all.length)return;
- timeline=all;
- let nearest=0,dist=Infinity;
- const now=Date.now();
- all.forEach((t,i)=>{const d=Math.abs(t-now);if(d<dist){nearest=i;dist=d;}});
- hour=nearest;
- $('timeSlider').max=String(all.length-1);$('timeSlider').disabled=false;syncTimeline();
+function initTimeline(){
+ // 16 previous UTC calendar days + current day and the next 15 days.
+ // All data types share one stable 768-hour ruler; unsupported model hours
+ // are left missing, not stretched or filled with another model.
+ const today=new Date(),utcMidnight=Date.UTC(today.getUTCFullYear(),today.getUTCMonth(),today.getUTCDate());
+ const start=utcMidnight-16*86400000;
+ timeline=Array.from({length:32*24},(_,i)=>start+i*3600000);
+ hour=nowIndex();
+ $('timeSlider').max=String(timeline.length-1);
+ $('timeSlider').disabled=false;
+ syncTimeline();
 }
 function t(){return timeline[hour]??Date.now();}
 function nowIndex(){if(!timeline.length)return 0;return timeline.reduce((best,v,i)=>Math.abs(v-Date.now())<Math.abs(timeline[best]-Date.now())?i:best,0);}
 function syncTimeline(){
  if(!timeline.length)return;
  $('timeLabel').textContent=IST.format(new Date(t()));
- $('timeSub').textContent=new Date(t()).toISOString().slice(0,16).replace('T',' ')+' UTC · '+(hour+1)+' / '+timeline.length+' hourly frames';
+ const historical=t()<Date.now()-3600000;
+ $('timeSub').textContent=(historical?'MODEL HISTORY · not observed':'FORECAST · model output')+' · '+new Date(t()).toISOString().slice(0,16).replace('T',' ')+' UTC · '+(hour+1)+' / '+timeline.length;
  $('timeSlider').value=String(hour);$('prev').disabled=hour===0;$('next').disabled=hour===timeline.length-1;
  const ticks=[0,.25,.5,.75,1].map(f=>timeline[Math.min(timeline.length-1,Math.round((timeline.length-1)*f))]);
  $('ruler').replaceChildren(...ticks.map(ms=>{const s=document.createElement('span');s.textContent=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',hour:'2-digit',hour12:true}).format(new Date(ms));return s;}));
- $('modelBadge').textContent=FIELDS[layer].label+' · '+(FIELDS[layer].type==='wind'?MODELS_WIND[windModel]:MODELS_WAVE[waveModel]);
- draw();updateMetrics();drawTide();
+ $('modelBadge').textContent=FIELDS[layer].label+' · '+(FIELDS[layer].type==='weather'?MODELS_WIND[windModel]:MODELS_WAVE[waveModel]);
+ draw();updateMetrics();drawTide();drawRain();
 }
 function stopPlay(){playing=false;clearTimeout(playTimer);$('play').textContent='▶';}
 function step(d){if(!timeline.length)return;hour=Math.max(0,Math.min(timeline.length-1,hour+d));syncTimeline();}
@@ -364,20 +391,20 @@ function gridKey(type,model,positions){
 }
 async function loadGrid(force){
  clearTimeout(fetchTimer);
- const kind=FIELDS[layer].type,model=kind==='wind'?windModel:waveModel,points=locationGrid(),key=gridKey(kind,model,points),seq=++gridSeq;
+ const kind=FIELDS[layer].type,model=kind==='weather'?windModel:waveModel,points=locationGrid(),key=gridKey(kind,model,points),seq=++gridSeq;
  const cached=cache.get(key);
- if(!force&&cached&&Date.now()-cached.at<CACHE_TTL){grid=cached;draw();setStatus('✓ '+FIELDS[layer].label+' · '+(kind==='wind'?MODELS_WIND[model]:MODELS_WAVE[model])+' · cached field');return;}
- grid=null;draw();setStatus('Loading '+(kind==='wind'?'wind':'wave')+' model at '+points.length+' map sample points…');
+ if(!force&&cached&&Date.now()-cached.at<CACHE_TTL){grid=cached;draw();setStatus('✓ '+FIELDS[layer].label+' · '+(kind==='weather'?MODELS_WIND[model]:MODELS_WAVE[model])+' · cached field');return;}
+ grid=null;draw();setStatus('Loading '+(kind==='weather'?'weather':'wave')+' model at '+points.length+' map sample points…');
  try{
-  const response=await jsonFetch(reqUrl(kind,points,model,kind==='wind'?WIND_VARS:WAVE_VARS));
+  const response=(await fetchForecast(kind,points,model,kind==='weather'?WEATHER_VARS:WAVE_VARS)).data;
   if(seq!==gridSeq)return;
   const values=normalise(response,points.length);
   if(!values.some(x=>x&&x.hourly))throw Error('Model returned no hourly forecasts');
   grid={kind,model,points,values,at:Date.now()};cache.set(key,grid);
   if(cache.size>25)cache.delete(cache.keys().next().value);
-  setTimeline(values.find(Boolean));draw();
+  draw();
   const valid=values.filter(Boolean).length;
-  setStatus('✓ '+FIELDS[layer].label+' · '+(kind==='wind'?MODELS_WIND[model]:MODELS_WAVE[model])+' · '+valid+'/'+points.length+' sample points');
+  setStatus('✓ '+FIELDS[layer].label+' · '+(kind==='weather'?MODELS_WIND[model]:MODELS_WAVE[model])+' · '+valid+'/'+points.length+' sample points');
  }catch(e){
   if(seq!==gridSeq)return;
   grid=null;draw();setStatus('⚠ Model field unavailable: '+(e.message||'request failed')+' · try another model','bad');
