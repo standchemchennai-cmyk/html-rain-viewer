@@ -98,6 +98,7 @@
       <div class="metric"><label>Rain · selected hour</label><strong id="mRain">—</strong><small id="dRain">Hourly model total</small></div>
       <div class="metric"><label>Rain · next 24h</label><strong id="mRain24">—</strong><small id="dRain24">From selected hour</small></div>
     </div>
+    <div id="coverageSummary" class="tide-warning" style="margin:0 0 12px">Checking each model's available period…</div>
     <div class="tidal"><div class="tidal-title"><strong>〰 Tide / sea level</strong><span id="tideNow">Loading…</span></div>
       <canvas id="tideChart" width="280" height="115" aria-label="Hourly modelled tide height chart"></canvas>
       <div id="tideEvents" class="tide-events">Loading sea-level forecasts…</div>
@@ -555,6 +556,20 @@ function updateMetrics(){
   $('dRain').textContent='Unavailable: '+pointData.wind.error.slice(0,34);
  }
  if(pointData.wave?.error)$('dWaves').textContent='Unavailable: '+pointData.wave.error.slice(0,34);
+ const coverage=(entry,field)=>{
+  if(!entry)return 'loading';
+  if(entry.error)return 'unavailable';
+  const vals=entry.hourly?.[field]||[],times=entry.hourly?.time||[];
+  for(let i=vals.length-1;i>=0;i--)if(num(vals[i])){
+   const end=parseTime(times[i]);
+   return Number.isFinite(end)?'through '+new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',hour:'2-digit',hour12:true}).format(new Date(end)):'unknown';
+  }
+  return 'no valid hours';
+ };
+ $('coverageSummary').textContent='Available data — Wind/rain: '+coverage(pointData.wind,'precipitation')
+ +'; Waves: '+coverage(pointData.wave,'wave_height')
+ +'; Tide: '+coverage(pointData.tide,'sea_level_height_msl')
+ +'. Model ranges can be shorter than the 16-day slider.';
 }
 function drawRain(){
  const cv=$('rainChart'),dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth||280,h=cv.clientHeight||112;
